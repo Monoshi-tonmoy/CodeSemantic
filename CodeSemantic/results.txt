@@ -1,0 +1,9 @@
+Model Name: Llama-3.1-8B-Instruct, PT ID: 0, Accuracy: 0.15
+Model Name: Llama-3.1-8B-Instruct, PT ID: 1, Accuracy: 0.2
+Model Name: Llama-3.1-8B-Instruct, PT ID: 2, Accuracy: 0.15
+Model Name: Qwen2.5-Coder-7B-Instruct, PT ID: 0, Accuracy: 0.27
+Model Name: Qwen2.5-Coder-7B-Instruct, PT ID: 1, Accuracy: 0.24
+Model Name: Qwen2.5-Coder-7B-Instruct, PT ID: 2, Accuracy: 0.27
+Model Name: Qwen2.5-7B-Instruct, PT ID: 0, Accuracy: 0.1
+Model Name: Qwen2.5-7B-Instruct, PT ID: 1, Accuracy: 0.09
+Model Name: Qwen2.5-7B-Instruct, PT ID: 2, Accuracy: 0.1
