@@ -1,69 +1,60 @@
 import numpy as np
-from utils import load_my_dataset
-from utils import load_model
-from utils import load_pt
-
-
-# def save_to_file(model_name, pt_id, accuracy):
-#  
-#     with open('results.txt', 'a') as f:
-#         f.write(f"Model Name: {model_name}, PT ID: {pt_id}, Accuracy: {accuracy}\n")
-
+from collections import defaultdict
+from utils import (
+    load_my_dataset,
+    load_model,
+    load_pt,
+    save_jsonl,
+    save_results_to_json,
+    get_default_config
+)
 
 def main(data_id, model_id, pt_id):
-    config = {
-        'temperature': 0.8,
-        "top_p": 0.95,
-        "max_tokens": 1024,  # args.max_tokens,
-        "tp_size": 1,  # args.tp_size,
-        "dtype": "float16",
-        "stop": [
-            "\n>>>", "\n$", '\nclass',
-            '\ndef', '\n#', '\nprint',
-            "\n@", "\nif __name__ == '__main__':"
-        ]
-    }
-
-    dataset = load_my_dataset(data_id)
-    dataset = dataset[:100]
+    config = get_default_config()
+    dataset = load_my_dataset(data_id)[:200] 
     model = load_model(model_id)
     model.init_ai_kwargs(config)
     pt = load_pt(pt_id)
     
-    
-    model_name = model.model_name
-    
     res = model.chat_batch(pt, dataset)
+    
     is_correct = []
+    type_correct = defaultdict(int)
+    type_total = defaultdict(int)
+    language = None
+
     for d in res:
         try:
-            # Checking if 'pred_ans' exists and is not empty 
+            language = d['ori_task']['Programming Language'].lower() 
+            stmt_type = d['ori_task']['Statement Type']
+            
             if 'pred_ans' in d and len(d['pred_ans']) > 0:
-                is_correct.append(d['ori_task']['Value After Statement Execution'] == d['pred_ans'][0])
+                correct = d['ori_task']['Value After Statement Execution'] == d['pred_ans'][0]
+                is_correct.append(correct)
+                type_correct[stmt_type] += int(correct)
+                type_total[stmt_type] += 1
             else:
-            #if empty, incorrect
                 is_correct.append(False)
-                print(f"Warning: Missing or empty 'pred_ans' in response for model {model_name}, PT ID {pt_id}")
-        except KeyError:
-            # Handle cases where 'ori_task' or 'Value After Statement Execution' is missing
-            is_correct.append(False)
-            print(f"Warning: Missing 'ori_task' or 'Value After Statement Execution' in response for model {model_name}, PT ID {pt_id}")
+                type_total[stmt_type] += 1
+        except KeyError as e:
+            print(f"Warning: Missing key {e} in response for model {model.model_name}")
 
-    accuracy = np.mean(is_correct)
 
-    print(f"Here goes the output: {model_name}, {pt_id}, {accuracy}")
+    overall_accuracy = np.mean(is_correct) if is_correct else 0.0
+    type_accuracy = {t: type_correct[t]/type_total[t] if type_total[t] > 0 else 0.0 
+                    for t in type_total}
+    
 
-    save_to_file(model_name, pt_id, accuracy)
-
+    save_results_to_json(
+        model.model_name, pt_id, language, 
+        overall_accuracy, type_accuracy, dict(type_total)
+    )
+    
+    print(f"Results for {model.model_name} (PT {pt_id}, {language}):")
+    print(f"  Overall accuracy: {overall_accuracy:.2f}")
+    for stmt_type, acc in type_accuracy.items():
+        print(f"  {stmt_type}: {acc:.2f} ({type_total[stmt_type]} samples)")
 
 if __name__ == '__main__':
+    main(0, 5, 0)
     main(0, 6, 0)
-    main(0, 6, 1)
-    main(0, 6, 2)
-    # main(0, 0, 0)
-    # main(0, 0, 1)
-    # main(0, 0, 2)
-
-    # main(0, 2, 0)
-    # main(0, 2, 1)
-    # main(0, 2, 2)
