@@ -80,6 +80,9 @@ def load_my_dataset(data_id):
     if data_id == 0:
         with open("dataset/statement_prediction_dataset.jsonl", 'r') as f:
             dataset = [json.loads(line) for line in f]
+    elif data_id == 1:
+        with open("dataset/statement_prediction_dataset_C.jsonl", 'r') as f:
+            dataset = [json.loads(line) for line in f]
     else:
         raise NotImplementedError
     return dataset
@@ -92,9 +95,15 @@ def model_id2name_cls(model_id: int):
         2: ("anthropic.claude-3-5-haiku-20241022-v1:0", AbstLiteLLM, "bedrock"),
         3: ("anthropic.claude-3-5-sonnet-20241022-v2:0", AbstLiteLLM, "bedrock"),
         4: ("deepseek-ai/deepseek-coder-1.3b-instruct", LocalVLLM, "openai"),
-        5: ("meta-llama/Llama-3.1-8B-Instruct", LocalVLLM, "openai"),
-        6: ("Qwen/Qwen2.5-Coder-7B-Instruct", LocalVLLM, "openai"),
-        7: ("Qwen/Qwen2.5-7B-Instruct", LocalVLLM, "openai")
+        5: ("Qwen/Qwen2.5-7B-Instruct", LocalVLLM, "openai"),
+        6: ("microsoft/Phi-3-medium-128k-instruct", LocalVLLM, "openai"),
+        7: ("meta-llama/Llama-3.1-8B-Instruct", LocalVLLM, "openai"),
+        8: ("Qwen/Qwen2.5-14B-Instruct-1M", LocalVLLM, "openai"),
+        9: ("Qwen/Qwen2.5-Coder-7B-Instruct", LocalVLLM, "openai"),
+        10: ("deepseek-ai/DeepSeek-Coder-V2-Lite-Instruct", LocalVLLM, "openai"),
+        11: ("microsoft/Phi-4-mini-instruct", LocalVLLM, "openai"),
+        12: ("microsoft/Phi-3.5-mini-instruct", LocalVLLM, "openai"),
+        13: ("ibm-granite/granite-3.2-8b-instruct", LocalVLLM, "openai"),
     }
     
     if model_id not in model_map:

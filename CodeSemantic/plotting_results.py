@@ -30,32 +30,41 @@ def plot_results(results_file='Results/all_results.json'):
     df = pd.DataFrame(data)
     
     sns.set_theme(style="whitegrid")
-    plt.figure(figsize=(14, 10))
     
-
-    plt.subplot(2, 1, 1)
-    overall_df = df[df['Statement Type'] == 'Overall']
-    sns.barplot(data=overall_df, x='Model', y='Accuracy', hue='Language')
-    plt.title('Overall Accuracy by Model and Language')
+    plt.figure(figsize=(12, 6), dpi=100)
+    overall_df = df[df['Statement Type'] == 'Overall'].copy()
+    bar_plot = sns.barplot(data=overall_df, x='Model', y='Accuracy', hue='Language')
+    plt.title('Overall Accuracy by Model and Language', fontsize=14, pad=20)
     plt.ylim(0, 1)
     plt.legend(loc='upper right')
-    
-    plt.subplot(2, 1, 2)
-    type_df = df[df['Statement Type'] != 'Overall']
-    
-    type_df['Model_Language'] = type_df['Model'] + ' (' + type_df['Language'] + ')'
-    
-    stmt_order = type_df.groupby('Statement Type')['Accuracy'].mean().sort_values().index
-    
-    sns.barplot(data=type_df, x='Statement Type', y='Accuracy', 
-                hue='Model_Language', order=stmt_order)
-    plt.title('Accuracy by Statement Type, Model and Language')
-    plt.ylim(0, 1)
-    plt.xticks(rotation=45)
-    plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+    plt.xticks(rotation=45, ha='right', fontsize=12)
+    plt.tick_params(axis='x', which='major', pad=10)
     plt.tight_layout()
+    plt.savefig('Results/overall_accuracy.png', bbox_inches='tight', dpi=300)
+    plt.show()
     
-    plt.savefig('Results/model_comparison.png', bbox_inches='tight')
+    plt.figure(figsize=(14, 6), dpi=100)
+    python_df = df[(df['Statement Type'] != 'Overall') & (df['Language'] == 'python')].copy()
+    stmt_order = python_df.groupby('Statement Type')['Accuracy'].mean().sort_values().index
+    sns.barplot(data=python_df, x='Statement Type', y='Accuracy', hue='Model', order=stmt_order)
+    plt.title('Statement Type Accuracy - Python', fontsize=14, pad=20)
+    plt.ylim(0, 1)
+    plt.xticks(rotation=45, ha='right', fontsize=12)
+    plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', fontsize=10)
+    plt.tight_layout()
+    plt.savefig('Results/statement_accuracy_python.png', bbox_inches='tight', dpi=300)
+    plt.show()
+    
+    plt.figure(figsize=(14, 6), dpi=100)
+    c_df = df[(df['Statement Type'] != 'Overall') & (df['Language'] == 'c')].copy()
+    stmt_order = c_df.groupby('Statement Type')['Accuracy'].mean().sort_values().index
+    sns.barplot(data=c_df, x='Statement Type', y='Accuracy', hue='Model', order=stmt_order)
+    plt.title('Statement Type Accuracy - C', fontsize=14, pad=20)
+    plt.ylim(0, 1)
+    plt.xticks(rotation=45, ha='right', fontsize=12)
+    plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', fontsize=10)
+    plt.tight_layout()
+    plt.savefig('Results/statement_accuracy_c.png', bbox_inches='tight', dpi=300)
     plt.show()
 
 if __name__ == '__main__':
