@@ -1,0 +1,15 @@
+{
+  "DeepSeek-Coder-V2-Lite-Instruct": {
+    "pt0": {
+      "python": {
+        "overall_accuracy": 0.56,
+        "type_accuracy": {
+          "Assignment": 0.56
+        },
+        "type_counts": {
+          "Assignment": 50
+        }
+      }
+    }
+  }
+}

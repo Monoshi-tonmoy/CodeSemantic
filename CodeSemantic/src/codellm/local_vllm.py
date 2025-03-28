@@ -23,10 +23,20 @@ class LocalVLLM(AbstLLM):
         self.tokenizer = AutoTokenizer.from_pretrained(model)
         self.stop_token_ids = [self.tokenizer.eos_token_id]
 
+        # Using VLLM quantization with bitsandbytes: https://github.com/vllm-project/vllm/issues/11655 
         self.llm = LLM(
             model=model,
             trust_remote_code=True,
             max_model_len=2048,
+            dtype=torch.bfloat16,
+            quantization="bitsandbytes",
+            load_format="bitsandbytes",
+            # hf_overrides={"quantization_config": 
+            #     {
+            #     "load_in_4bit": True, 
+            #     "quant_method": "bitsandbytes"
+            #     }
+            # }
         )
 
         self.sampling_params = None

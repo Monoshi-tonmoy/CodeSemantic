@@ -12,7 +12,7 @@ from utils import (
 
 def main(data_id, model_id, pt_id):
     config = get_default_config()
-    dataset = load_my_dataset(data_id)
+    dataset = load_my_dataset(data_id)[:50]
     model = load_model(model_id)
     model.init_ai_kwargs(config)
     pt = load_pt(pt_id)
@@ -84,10 +84,10 @@ def clear_hf_cache():
         print(f"❌ Failed to clear cache: {e}")
 
 if __name__ == '__main__':
-    data_id = 1  
+    data_id = 0  
     pt_id = 0   
     
-    for model_id in range(10, 11): 
+    for model_id in range(14, 15): 
         print(f"\n=== Running Model ID: {model_id} ===")
         main(data_id, model_id, pt_id)
         clear_hf_cache()
