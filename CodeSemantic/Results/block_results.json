@@ -1,0 +1,184 @@
+{
+  "Qwen2.5-Coder-7B-Instruct": {
+    "pt0": {
+      "python": {
+        "overall_accuracy": 0.3,
+        "is_block_based": true,
+        "block_results": {
+          "5": {
+            "accuracy": 0.3333333333333333,
+            "correct": 3,
+            "total": 9
+          },
+          "1": {
+            "accuracy": 0.3,
+            "correct": 3,
+            "total": 10
+          },
+          "2": {
+            "accuracy": 0.25,
+            "correct": 3,
+            "total": 12
+          },
+          "3": {
+            "accuracy": 0.2857142857142857,
+            "correct": 2,
+            "total": 7
+          },
+          "4": {
+            "accuracy": 0.5,
+            "correct": 3,
+            "total": 6
+          },
+          "10": {
+            "accuracy": 0.0,
+            "correct": 0,
+            "total": 3
+          },
+          "20": {
+            "accuracy": 0.0,
+            "correct": 0,
+            "total": 1
+          },
+          "25": {
+            "accuracy": 0.5,
+            "correct": 1,
+            "total": 2
+          }
+        },
+        "sample_counts": {
+          "5": 9,
+          "1": 10,
+          "2": 12,
+          "3": 7,
+          "4": 6,
+          "10": 3,
+          "20": 1,
+          "25": 2
+        }
+      },
+      "c": {
+        "overall_accuracy": 0.06,
+        "is_block_based": true,
+        "block_results": {
+          "2": {
+            "accuracy": 0.0,
+            "correct": 0,
+            "total": 10
+          },
+          "3": {
+            "accuracy": 0.3333333333333333,
+            "correct": 2,
+            "total": 6
+          },
+          "4": {
+            "accuracy": 0.0,
+            "correct": 0,
+            "total": 8
+          },
+          "5": {
+            "accuracy": 0.0,
+            "correct": 0,
+            "total": 7
+          },
+          "1": {
+            "accuracy": 0.0,
+            "correct": 0,
+            "total": 6
+          },
+          "10": {
+            "accuracy": 0.25,
+            "correct": 1,
+            "total": 4
+          },
+          "15": {
+            "accuracy": 0.0,
+            "correct": 0,
+            "total": 3
+          },
+          "20": {
+            "accuracy": 0.0,
+            "correct": 0,
+            "total": 3
+          },
+          "25": {
+            "accuracy": 0.0,
+            "correct": 0,
+            "total": 3
+          }
+        },
+        "sample_counts": {
+          "2": 10,
+          "3": 6,
+          "4": 8,
+          "5": 7,
+          "1": 6,
+          "10": 4,
+          "15": 3,
+          "20": 3,
+          "25": 3
+        }
+      }
+    }
+  },
+  "Llama-3.1-8B-Instruct": {
+    "pt0": {
+      "python": {
+        "overall_accuracy": 0.18,
+        "is_block_based": true,
+        "block_results": {
+          "5": {
+            "accuracy": 0.3333333333333333,
+            "correct": 3,
+            "total": 9
+          },
+          "1": {
+            "accuracy": 0.1,
+            "correct": 1,
+            "total": 10
+          },
+          "2": {
+            "accuracy": 0.08333333333333333,
+            "correct": 1,
+            "total": 12
+          },
+          "3": {
+            "accuracy": 0.14285714285714285,
+            "correct": 1,
+            "total": 7
+          },
+          "4": {
+            "accuracy": 0.3333333333333333,
+            "correct": 2,
+            "total": 6
+          },
+          "10": {
+            "accuracy": 0.0,
+            "correct": 0,
+            "total": 3
+          },
+          "20": {
+            "accuracy": 0.0,
+            "correct": 0,
+            "total": 1
+          },
+          "25": {
+            "accuracy": 0.5,
+            "correct": 1,
+            "total": 2
+          }
+        },
+        "sample_counts": {
+          "5": 9,
+          "1": 10,
+          "2": 12,
+          "3": 7,
+          "4": 6,
+          "10": 3,
+          "20": 1,
+          "25": 2
+        }
+      }
+    }
+  }
+}

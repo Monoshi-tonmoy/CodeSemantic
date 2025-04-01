@@ -36,7 +36,7 @@ class StatementPt1(AbstPt):
             )
 
         self.pt_template_api = \
-            ("Given the following {lang} code snippet and the selected branch statement, "
+            ("Given the following {lang} code snippet and the selected statement, "
              "the local variable values of the api/function parameters are shown as follows, "
              "what will be the value after the selected API/Function call?\n\n"
              "Code Snippet\n"
@@ -46,6 +46,20 @@ class StatementPt1(AbstPt):
              "Selected API/Function: {statement}\n\n"
              "API/Function Parameters:\n"
              "{variables}\n\n"
+             "Please put your answer in the <ans></ans> tags"
+             )
+        
+        self.pt_template_block = \
+            ("Given the following {lang} code snippet and the selected statement, "
+             "the input of the code snippet is given as follows, "
+             "what will be the value after executing the selected statement?\n\n"
+             "Code Snippet\n"
+             "```{lang}\n"
+             "{code}\n"
+             "```\n\n"
+             "Selected Statement: {statement}\n\n"
+             "Function Inputs:\n"
+             "{inputs}\n\n"
              "Please put your answer in the <ans></ans> tags"
              )
 
@@ -58,27 +72,37 @@ class StatementPt1(AbstPt):
 
 
     def task2pt(self, task: dict ):
-        if task['Statement Type'] == "Branch":
-            pt = self.pt_template_branch.format(
+        is_block_based = 'Block_Size' in task
+            
+        if is_block_based:
+            pt = self.pt_template_block.format(
                 lang=task['Programming Language'].lower(),
                 code=task['Source Code'],
                 statement=task['Selected Statement'],
-                variables=task['Variable Values Before Statement'],
-            )
-        elif task['Statement Type'] == "API":
-            pt = self.pt_template_api.format(
-                lang=task['Programming Language'].lower(),
-                code=task['Source Code'],
-                statement=task['Selected Statement'],
-                variables=task['Variable Values Before Statement'],
+                inputs=task['Function Input'],
             )
         else:
-            pt = self.pt_template_assignment.format(
-                lang=task['Programming Language'].lower(),
-                code=task['Source Code'],
-                statement=task['Selected Statement'],
-                variables=task['Variable Values Before Statement'],
-            )
+            if task['Statement Type'] == "Branch":
+                pt = self.pt_template_branch.format(
+                    lang=task['Programming Language'].lower(),
+                    code=task['Source Code'],
+                    statement=task['Selected Statement'],
+                    variables=task['Variable Values Before Statement'],
+                )
+            elif task['Statement Type'] == "API":
+                pt = self.pt_template_api.format(
+                    lang=task['Programming Language'].lower(),
+                    code=task['Source Code'],
+                    statement=task['Selected Statement'],
+                    variables=task['Variable Values Before Statement'],
+                )
+            else:
+                pt = self.pt_template_assignment.format(
+                    lang=task['Programming Language'].lower(),
+                    code=task['Source Code'],
+                    statement=task['Selected Statement'],
+                    variables=task['Variable Values Before Statement'],
+                )
         return pt
 
     def extract_ans(self, prompt_str, llm_output_str):

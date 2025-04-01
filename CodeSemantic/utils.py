@@ -12,7 +12,7 @@ def save_jsonl(data, filename):
             json.dump(serialized_entry, f)
             f.write('\n')
 
-def load_existing_results(filename='all_results.jsonl'):
+def load_existing_results(filename='all_results.json'):
     """Load existing results if file exists, otherwise return empty dict"""
     try:
         with open(filename, 'r') as f:
@@ -20,33 +20,72 @@ def load_existing_results(filename='all_results.jsonl'):
     except (FileNotFoundError, json.JSONDecodeError):
         return {}
 
-def save_results_to_json(model_name, pt_id, language, overall_accuracy, type_accuracy, type_counts, filename='all_results_1.json'):
+def save_results_to_json(model_name, pt_id, language, overall_accuracy, 
+                        type_accuracy, detailed_results, 
+                        filename='all_results.json', is_block_based=False):
     """Save results to JSON in Results folder, preserving existing data"""
     os.makedirs('Results', exist_ok=True)
     
+    if is_block_based:
+        filename = 'block_results.json'
+    
     results_path = os.path.join('Results', filename)
     
-    existing_results = {}
-    if os.path.exists(results_path):
-        with open(results_path, 'r') as f:
-            try:
-                existing_results = json.load(f)
-            except json.JSONDecodeError:
-                existing_results = {}
+    existing_results = load_existing_results(results_path)
     
     if model_name not in existing_results:
         existing_results[model_name] = {}
     if f'pt{pt_id}' not in existing_results[model_name]:
         existing_results[model_name][f'pt{pt_id}'] = {}
     
-    existing_results[model_name][f'pt{pt_id}'][language] = {
+    result_entry = {
         'overall_accuracy': overall_accuracy,
-        'type_accuracy': type_accuracy,
-        'type_counts': type_counts
+        'is_block_based': is_block_based
     }
+    
+    if is_block_based:
+        # detailed_results already contains the properly structured data
+        result_entry.update({
+            'block_results': detailed_results,
+            'sample_counts': {
+                size: results['total']
+                for size, results in detailed_results.items()
+            }
+        })
+    else:
+        result_entry.update({
+            'type_accuracy': type_accuracy,
+            'type_counts': detailed_results
+        })
+    
+    existing_results[model_name][f'pt{pt_id}'][language] = result_entry
     
     with open(results_path, 'w') as f:
         json.dump(existing_results, f, indent=2)
+
+def load_results_for_model(model_name, is_block_based=False):
+    """Load results for a specific model from the appropriate file"""
+    filename = 'block_results.json' if is_block_based else 'all_results.json'
+    results_path = os.path.join('Results', filename)
+    
+    try:
+        with open(results_path, 'r') as f:
+            all_results = json.load(f)
+            return all_results.get(model_name, {})
+    except (FileNotFoundError, json.JSONDecodeError):
+        return {}
+
+def get_available_models(is_block_based=False):
+    """Get list of models that have results in the specified file"""
+    filename = 'block_results.json' if is_block_based else 'all_results.json'
+    results_path = os.path.join('Results', filename)
+    
+    try:
+        with open(results_path, 'r') as f:
+            all_results = json.load(f)
+            return list(all_results.keys())
+    except (FileNotFoundError, json.JSONDecodeError):
+        return []
 
 def serialize_vllm_objects(obj):
     """Recursively convert VLLM objects to serializable formats"""
@@ -82,6 +121,12 @@ def load_my_dataset(data_id):
             dataset = [json.loads(line) for line in f]
     elif data_id == 1:
         with open("dataset/statement_prediction_dataset_C.jsonl", 'r') as f:
+            dataset = [json.loads(line) for line in f]
+    elif data_id == 2:
+        with open("dataset/incremental_statement_prediction_python.jsonl", 'r') as f:
+            dataset = [json.loads(line) for line in f]
+    elif data_id == 3:
+        with open("dataset/incremental_statement_prediction_c.jsonl", 'r') as f:
             dataset = [json.loads(line) for line in f]
     else:
         raise NotImplementedError
