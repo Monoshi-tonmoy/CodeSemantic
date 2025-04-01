@@ -28,9 +28,9 @@ class LocalVLLM(AbstLLM):
             model=model,
             trust_remote_code=True,
             max_model_len=2048,
-            dtype=torch.bfloat16,
-            quantization="bitsandbytes",
-            load_format="bitsandbytes",
+            # dtype=torch.bfloat16,
+            # quantization="bitsandbytes",
+            # load_format="bitsandbytes",
             # hf_overrides={"quantization_config": 
             #     {
             #     "load_in_4bit": True, 

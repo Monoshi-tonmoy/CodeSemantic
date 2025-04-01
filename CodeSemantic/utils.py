@@ -12,7 +12,7 @@ def save_jsonl(data, filename):
             json.dump(serialized_entry, f)
             f.write('\n')
 
-def load_existing_results(filename='all_results.json_1'):
+def load_existing_results(filename='all_results.jsonl'):
     """Load existing results if file exists, otherwise return empty dict"""
     try:
         with open(filename, 'r') as f:
@@ -104,7 +104,7 @@ def model_id2name_cls(model_id: int):
         11: ("microsoft/Phi-4-mini-instruct", LocalVLLM, "openai"),
         12: ("microsoft/Phi-3.5-mini-instruct", LocalVLLM, "openai"),
         13: ("ibm-granite/granite-3.2-8b-instruct", LocalVLLM, "openai"),
-        14: ("deepseek-ai/DeepSeek-R1-Distill-Qwen-32B", LocalVLLM, "openai"),
+        14: ("deepseek-ai/DeepSeek-R1-Distill-Qwen-7B", LocalVLLM, "openai"),
     }
     
     if model_id not in model_map:
