@@ -150,6 +150,8 @@ def model_id2name_cls(model_id: int):
         12: ("microsoft/Phi-3.5-mini-instruct", LocalVLLM, "openai"),
         13: ("ibm-granite/granite-3.2-8b-instruct", LocalVLLM, "openai"),
         14: ("deepseek-ai/DeepSeek-R1-Distill-Qwen-7B", LocalVLLM, "openai"),
+        15: ("deepseek-ai/DeepSeek-R1-Distill-Llama-8B", LocalVLLM, "openai"),
+        16: ("deepseek-ai/DeepSeek-R1-Distill-Qwen-14B", LocalVLLM, "openai"),
     }
     
     if model_id not in model_map:

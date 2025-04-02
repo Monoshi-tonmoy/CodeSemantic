@@ -264,5 +264,125 @@
         }
       }
     }
+  },
+  "DeepSeek-R1-Distill-Qwen-7B": {
+    "pt0": {
+      "python": {
+        "overall_accuracy": 0.1834862385321101,
+        "is_block_based": false,
+        "type_accuracy": {
+          "Assignment": 0.17647058823529413,
+          "Branch": 0.24444444444444444,
+          "API": 0.09716599190283401,
+          "Arithmetic Assignment": 0.1111111111111111,
+          "Constant Assignment": 0.5
+        },
+        "type_counts": {
+          "Assignment": 68,
+          "Branch": 90,
+          "API": 247,
+          "Arithmetic Assignment": 72,
+          "Constant Assignment": 68
+        }
+      },
+      "c": {
+        "overall_accuracy": 0.10919540229885058,
+        "is_block_based": false,
+        "type_accuracy": {
+          "Constant Assignment": 0.6285714285714286,
+          "Assignment": 0.015625,
+          "Arithmetic Assignment": 0.0,
+          "Branch": 0.125,
+          "API": 0.0
+        },
+        "type_counts": {
+          "Constant Assignment": 35,
+          "Assignment": 64,
+          "Arithmetic Assignment": 73,
+          "Branch": 120,
+          "API": 56
+        }
+      }
+    }
+  },
+  "DeepSeek-R1-Distill-Llama-8B": {
+    "pt0": {
+      "python": {
+        "overall_accuracy": 0.23486238532110093,
+        "is_block_based": false,
+        "type_accuracy": {
+          "Assignment": 0.20588235294117646,
+          "Branch": 0.5777777777777777,
+          "API": 0.09716599190283401,
+          "Arithmetic Assignment": 0.20833333333333334,
+          "Constant Assignment": 0.3382352941176471
+        },
+        "type_counts": {
+          "Assignment": 68,
+          "Branch": 90,
+          "API": 247,
+          "Arithmetic Assignment": 72,
+          "Constant Assignment": 68
+        }
+      },
+      "c": {
+        "overall_accuracy": 0.11781609195402298,
+        "is_block_based": false,
+        "type_accuracy": {
+          "Constant Assignment": 0.4857142857142857,
+          "Assignment": 0.0,
+          "Arithmetic Assignment": 0.0,
+          "Branch": 0.2,
+          "API": 0.0
+        },
+        "type_counts": {
+          "Constant Assignment": 35,
+          "Assignment": 64,
+          "Arithmetic Assignment": 73,
+          "Branch": 120,
+          "API": 56
+        }
+      }
+    }
+  },
+  "DeepSeek-R1-Distill-Qwen-14B": {
+    "pt0": {
+      "python": {
+        "overall_accuracy": 0.41834862385321103,
+        "is_block_based": false,
+        "type_accuracy": {
+          "Assignment": 0.5147058823529411,
+          "Branch": 0.7222222222222222,
+          "API": 0.2145748987854251,
+          "Arithmetic Assignment": 0.4444444444444444,
+          "Constant Assignment": 0.6323529411764706
+        },
+        "type_counts": {
+          "Assignment": 68,
+          "Branch": 90,
+          "API": 247,
+          "Arithmetic Assignment": 72,
+          "Constant Assignment": 68
+        }
+      },
+      "c": {
+        "overall_accuracy": 0.1206896551724138,
+        "is_block_based": false,
+        "type_accuracy": {
+          "Constant Assignment": 0.45714285714285713,
+          "Assignment": 0.0,
+          "Arithmetic Assignment": 0.0136986301369863,
+          "Branch": 0.20833333333333334,
+          "API": 0.0
+        },
+        "type_counts": {
+          "Constant Assignment": 35,
+          "Assignment": 64,
+          "Arithmetic Assignment": 73,
+          "Branch": 120,
+          "API": 56
+        }
+      }
+    }
   }
 }

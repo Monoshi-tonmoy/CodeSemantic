@@ -111,7 +111,7 @@ def evaluate_block_based(res):
 
 def main(data_id, model_id, pt_id):
     config = get_default_config()
-    dataset = load_my_dataset(data_id)[:50]
+    dataset = load_my_dataset(data_id)
     model = load_model(model_id)
     model.init_ai_kwargs(config)
     pt = load_pt(pt_id)
@@ -157,10 +157,10 @@ def clear_hf_cache():
         print(f"❌ Failed to clear cache: {e}")
 
 if __name__ == '__main__':
-    data_id = 2  
+    data_id = 1  
     pt_id = 0   
     
-    for model_id in range(7, 8): 
+    for model_id in range(14, 17): 
         print(f"\n=== Running Model ID: {model_id} ===")
         main(data_id, model_id, pt_id)
         clear_hf_cache()
