@@ -27,7 +27,7 @@ def save_results_to_json(model_name, pt_id, language, overall_accuracy,
     os.makedirs('Results', exist_ok=True)
     
     if is_block_based:
-        filename = 'block_results.json'
+        filename = 'block_results_10.json'
     
     results_path = os.path.join('Results', filename)
     
@@ -127,6 +127,9 @@ def load_my_dataset(data_id):
             dataset = [json.loads(line) for line in f]
     elif data_id == 3:
         with open("dataset/incremental_statement_prediction_c.jsonl", 'r') as f:
+            dataset = [json.loads(line) for line in f]
+    elif data_id == 4:
+        with open("dataset/incremental_statement_prediction_python_10.jsonl", 'r') as f:
             dataset = [json.loads(line) for line in f]
     else:
         raise NotImplementedError

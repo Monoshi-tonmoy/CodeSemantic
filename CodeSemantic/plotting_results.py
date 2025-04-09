@@ -2,18 +2,31 @@ import json
 import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
+import matplotlib.patches as mpatches
+import os  # Added for directory creation
 
 def plot_results(results_file='Results/all_results.json'):
+    # Load and process data
     with open(results_file) as f:
         results = json.load(f)
-    
-    # Define the reasoning models we want to plot separately
+
+    # Define models and settings
     reasoning_models = {
         "DeepSeek-R1-Distill-Qwen-7B",
         "DeepSeek-R1-Distill-Llama-8B",
         "DeepSeek-R1-Distill-Qwen-14B"
     }
     
+    # Define the expected statement types based on your JSON
+    expected_stmt_types = [
+        "API",
+        "Arithmetic Assignment",
+        "Assignment",
+        "Branch",
+        "Constant Assignment"
+    ]
+
+    # Prepare data
     data = []
     for model, pt_data in results.items():
         for pt, lang_data in pt_data.items():
@@ -33,92 +46,225 @@ def plot_results(results_file='Results/all_results.json'):
                         'Statement Type': stmt_type,
                         'Count': metrics['type_counts'][stmt_type]
                     })
-    
+
     df = pd.DataFrame(data)
-    
-    # Filter for reasoning models
-    reasoning_df = df[df['Model'].isin(reasoning_models)].copy()
-    
-    # Plot 1: Overall Accuracy for Reasoning Models
+    df['Model Type'] = df['Model'].apply(lambda x: 'Reasoning' if x in reasoning_models else 'Baseline')
+
+    # Set visual style
     sns.set_theme(style="whitegrid")
-    plt.figure(figsize=(12, 6), dpi=100)
-    overall_reasoning_df = reasoning_df[reasoning_df['Statement Type'] == 'Overall'].copy()
-    bar_plot = sns.barplot(data=overall_reasoning_df, x='Model', y='Accuracy', hue='Language')
-    plt.title('Overall Accuracy - Reasoning Models', fontsize=14, pad=20)
-    plt.ylim(0, 1)
-    plt.legend(loc='upper right')
-    plt.xticks(rotation=45, ha='right', fontsize=12)
-    plt.tick_params(axis='x', which='major', pad=10)
-    plt.tight_layout()
-    plt.savefig('Results/reasoning_models_overall_accuracy.png', bbox_inches='tight', dpi=300)
-    plt.show()
+    plt.rcParams['font.size'] = 12
+    reasoning_hatch = '///'
+    baseline_hatch = ''
+    palette = sns.color_palette("husl", len(df['Model'].unique()))
+
+    def plot_statement_accuracy(df, language, title_suffix):
+        plt.figure(figsize=(16, 8), dpi=120)
+        lang_df = df[(df['Statement Type'] != 'Overall') & 
+                    (df['Language'] == language.lower())].copy()
+        
+        # Ensure we only plot existing statement types
+        existing_stmt_types = lang_df['Statement Type'].unique()
+        stmt_order = [s for s in expected_stmt_types if s in existing_stmt_types]
+        
+        if not stmt_order:
+            print(f"No statement type data available for {language}")
+            return
+            
+        # Sort models by their overall accuracy
+        model_order = lang_df.groupby('Model')['Accuracy'].mean().sort_values(ascending=False).index
+        
+        # Plot
+        ax = sns.barplot(
+            data=lang_df,
+            x='Statement Type',
+            y='Accuracy',
+            hue='Model',
+            order=stmt_order,
+            hue_order=model_order,
+            palette=palette
+        )
+
+        # Apply hatching for reasoning models
+        for i, bar in enumerate(ax.patches):
+            model_idx = i // len(stmt_order)
+            if model_idx < len(model_order):
+                model_name = model_order[model_idx]
+                if model_name in reasoning_models:
+                    bar.set_hatch(reasoning_hatch)
+
+        # Add value labels
+        for bar in ax.patches:
+            height = bar.get_height()
+            if height > 0.01:
+                ax.text(
+                    bar.get_x() + bar.get_width()/2.,
+                    height + 0.01,
+                    f'{height:.2f}',
+                    ha='center',
+                    va='bottom',
+                    fontsize=9
+                )
+
+        # Custom legend - FIXED: Changed to legend_handles
+        handles = [
+            mpatches.Patch(facecolor='gray', hatch=reasoning_hatch, label='Reasoning Model'),
+            mpatches.Patch(facecolor='gray', hatch=baseline_hatch, label='Baseline Model')
+        ]
+        plt.legend(
+            handles=handles + ax.legend_.legend_handles,
+            bbox_to_anchor=(1.05, 1),
+            loc='upper left',
+            fontsize=10
+        )
+
+        plt.title(f'Statement Type Accuracy - {language} {title_suffix}', fontsize=14, pad=20)
+        plt.xticks(rotation=45, ha='right')
+        plt.tight_layout()
+        plt.savefig(f'Results/statement_accuracy_{language.lower()}{title_suffix.replace(" ", "_").lower()}.png', 
+                   bbox_inches='tight', dpi=300)
+        plt.show()
+
+    def plot_overall_accuracy(df, title_suffix=""):
+        plt.figure(figsize=(14, 6), dpi=120)
+        overall_df = df[df['Statement Type'] == 'Overall'].copy()
+        
+        if overall_df.empty:
+            print("No overall accuracy data available")
+            return
+            
+        # Sort models by accuracy
+        model_order = overall_df.groupby('Model')['Accuracy'].mean().sort_values(ascending=False).index
+        
+        ax = sns.barplot(
+            data=overall_df,
+            x='Model',
+            y='Accuracy',
+            hue='Language',
+            order=model_order,
+            palette=palette
+        )
+
+        # Add value labels
+        for bar in ax.patches:
+            ax.text(
+                bar.get_x() + bar.get_width()/2.,
+                bar.get_height() + 0.01,
+                f'{bar.get_height():.2f}',
+                ha='center',
+                va='bottom',
+                fontsize=9
+            )
+
+        plt.title(f'Overall Accuracy by Model {title_suffix}', fontsize=14, pad=20)
+        plt.ylim(0, 1)
+        plt.xticks(rotation=45, ha='right')
+        plt.legend(loc='upper right')
+        plt.tight_layout()
+        plt.savefig(f'Results/overall_accuracy{title_suffix.replace(" ", "_").lower()}.png', 
+                   bbox_inches='tight', dpi=300)
+        plt.show()
+
+    # Generate all plots
+    print("Generating plots...")
     
-    # Plot 2: Statement Type Accuracy for Python (Reasoning Models)
-    plt.figure(figsize=(14, 6), dpi=100)
-    python_reasoning_df = reasoning_df[(reasoning_df['Statement Type'] != 'Overall') & 
-                                     (reasoning_df['Language'] == 'python')].copy()
-    stmt_order = python_reasoning_df.groupby('Statement Type')['Accuracy'].mean().sort_values().index
-    sns.barplot(data=python_reasoning_df, x='Statement Type', y='Accuracy', hue='Model', order=stmt_order)
-    plt.title('Statement Type Accuracy - Python (Reasoning Models)', fontsize=14, pad=20)
-    plt.ylim(0, 1)
-    plt.xticks(rotation=45, ha='right', fontsize=12)
-    plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', fontsize=10)
-    plt.tight_layout()
-    plt.savefig('Results/reasoning_models_statement_accuracy_python.png', bbox_inches='tight', dpi=300)
-    plt.show()
+    # 1. Overall accuracy (all models)
+    plot_overall_accuracy(df)
     
-    # Plot 3: Statement Type Accuracy for C (Reasoning Models)
-    plt.figure(figsize=(14, 6), dpi=100)
-    c_reasoning_df = reasoning_df[(reasoning_df['Statement Type'] != 'Overall') & 
-                                 (reasoning_df['Language'] == 'c')].copy()
-    stmt_order = c_reasoning_df.groupby('Statement Type')['Accuracy'].mean().sort_values().index
-    sns.barplot(data=c_reasoning_df, x='Statement Type', y='Accuracy', hue='Model', order=stmt_order)
-    plt.title('Statement Type Accuracy - C (Reasoning Models)', fontsize=14, pad=20)
-    plt.ylim(0, 1)
-    plt.xticks(rotation=45, ha='right', fontsize=12)
-    plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', fontsize=10)
-    plt.tight_layout()
-    plt.savefig('Results/reasoning_models_statement_accuracy_c.png', bbox_inches='tight', dpi=300)
-    plt.show()
+    # 2. Statement accuracy by language (all models)
+    plot_statement_accuracy(df, "Python", "(All Models)")
+    plot_statement_accuracy(df, "C", "(All Models)")
     
-    # Original plots for all models (unchanged from your original code)
-    sns.set_theme(style="whitegrid")
+    # 3. Reasoning models only
+    reasoning_df = df[df['Model Type'] == 'Reasoning'].copy()
+    if not reasoning_df.empty:
+        plot_overall_accuracy(reasoning_df, "- Reasoning Models Only")
+        plot_statement_accuracy(reasoning_df, "Python", "(Reasoning Models)")
+        plot_statement_accuracy(reasoning_df, "C", "(Reasoning Models)")
+    else:
+        print("Warning: No reasoning models found in the data")
     
-    plt.figure(figsize=(12, 6), dpi=100)
-    overall_df = df[df['Statement Type'] == 'Overall'].copy()
-    bar_plot = sns.barplot(data=overall_df, x='Model', y='Accuracy', hue='Language')
-    plt.title('Overall Accuracy by Model and Language', fontsize=14, pad=20)
-    plt.ylim(0, 1)
-    plt.legend(loc='upper right')
-    plt.xticks(rotation=45, ha='right', fontsize=12)
-    plt.tick_params(axis='x', which='major', pad=10)
-    plt.tight_layout()
-    plt.savefig('Results/overall_accuracy.png', bbox_inches='tight', dpi=300)
-    plt.show()
+    return df  # Return the dataframe for use in comparisons
+
+def plot_model_comparison(df, model1, model2, language="python", save_path="Results/"):
+    """
+    Generate a bar plot comparing statement accuracy between two specific models.
     
-    plt.figure(figsize=(14, 6), dpi=100)
-    python_df = df[(df['Statement Type'] != 'Overall') & (df['Language'] == 'python')].copy()
-    stmt_order = python_df.groupby('Statement Type')['Accuracy'].mean().sort_values().index
-    sns.barplot(data=python_df, x='Statement Type', y='Accuracy', hue='Model', order=stmt_order)
-    plt.title('Statement Type Accuracy - Python', fontsize=14, pad=20)
-    plt.ylim(0, 1)
-    plt.xticks(rotation=45, ha='right', fontsize=12)
-    plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', fontsize=10)
-    plt.tight_layout()
-    plt.savefig('Results/statement_accuracy_python.png', bbox_inches='tight', dpi=300)
-    plt.show()
+    Args:
+        df: DataFrame containing the accuracy data
+        model1: First model name (str)
+        model2: Second model name (str)
+        language: Target language ("python" or "c")
+        save_path: Directory to save the plot
+    """
     
-    plt.figure(figsize=(14, 6), dpi=100)
-    c_df = df[(df['Statement Type'] != 'Overall') & (df['Language'] == 'c')].copy()
-    stmt_order = c_df.groupby('Statement Type')['Accuracy'].mean().sort_values().index
-    sns.barplot(data=c_df, x='Statement Type', y='Accuracy', hue='Model', order=stmt_order)
-    plt.title('Statement Type Accuracy - C', fontsize=14, pad=20)
-    plt.ylim(0, 1)
-    plt.xticks(rotation=45, ha='right', fontsize=12)
-    plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', fontsize=10)
+    expected_stmt_types = [
+        "API",
+        "Arithmetic Assignment",
+        "Assignment",
+        "Branch",
+        "Constant Assignment"
+    ]
+    # Filter data for the two models and language
+    compare_df = df[
+        (df['Model'].isin([model1, model2])) & 
+        (df['Language'] == language.lower()) & 
+        (df['Statement Type'] != 'Overall')
+    ].copy()
+    
+    if compare_df.empty:
+        print(f"No data available for {model1} and {model2} in {language}")
+        return
+    
+    # Get statement types present in the data
+    stmt_types = compare_df['Statement Type'].unique()
+    stmt_order = [s for s in expected_stmt_types if s in stmt_types]
+    
+    plt.figure(figsize=(12, 6), dpi=120)
+    ax = sns.barplot(
+        data=compare_df,
+        x='Statement Type',
+        y='Accuracy',
+        hue='Model',
+        order=stmt_order,
+        palette=["#4C72B0", "#DD8452"]  # Specific colors for 2 models
+    )
+    
+    # Add value labels
+    for bar in ax.patches:
+        height = bar.get_height()
+        if height > 0.01:
+            ax.text(
+                bar.get_x() + bar.get_width()/2.,
+                height + 0.01,
+                f'{height:.2f}',
+                ha='center',
+                va='bottom',
+                fontsize=10
+            )
+    
+    # Customize plot
+    plt.title(f'Statement Accuracy Comparison\n{model1} vs {model2} ({language.title()})', pad=15)
+    plt.ylabel("Accuracy")
+    plt.ylim(0, min(1.0, compare_df['Accuracy'].max() * 1.25))
+    plt.xticks(rotation=45, ha='right')
+    plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+    
+    # Save and show
+    os.makedirs(save_path, exist_ok=True)
+    filename = f"{save_path}comparison_{model1}_vs_{model2}_{language}.png"
     plt.tight_layout()
-    plt.savefig('Results/statement_accuracy_c.png', bbox_inches='tight', dpi=300)
+    plt.savefig(filename, bbox_inches='tight', dpi=300)
     plt.show()
+    print(f"Saved comparison plot to {filename}")
 
 if __name__ == '__main__':
-    plot_results()
+    # Get the dataframe from plot_results
+    df = plot_results()
+    
+    # Generate comparison plot
+    plot_model_comparison(
+        df, 
+        model1="Qwen2.5-14B-Instruct-1M", 
+        model2="DeepSeek-R1-Distill-Qwen-14B",
+        language="python"
+    )

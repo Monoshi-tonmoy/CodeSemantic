@@ -27,7 +27,7 @@ class LocalVLLM(AbstLLM):
         self.llm = LLM(
             model=model,
             trust_remote_code=True,
-            max_model_len=4096,
+            max_model_len=2048,
             # dtype=torch.bfloat16,
             # quantization="bitsandbytes",
             # load_format="bitsandbytes",
