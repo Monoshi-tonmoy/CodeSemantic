@@ -5,8 +5,9 @@ from ..abst_pt import AbstPt
 
 
 class StatementPt1(AbstPt):
-    def __init__(self, name, demos):
-        super().__init__(name, demos)
+    def __init__(self, name, demos=None, args=None):
+        super().__init__(name, demos or [])
+        self.args = args
         self.pt_template_assignment = \
             ("Given the following {lang} code snippet and the selected statement, "
              "the local variable values before the statements are shown as follows, "
@@ -62,6 +63,66 @@ class StatementPt1(AbstPt):
              "{inputs}\n\n"
              "Please put your answer in the <ans></ans> tags"
              )
+        self.pt_template_output = \
+            ("Given the following {lang} code snippet and input of the code, "
+             "what will be the output of the code given the input value?\n\n"
+             "Code Snippet\n"
+             "```{lang}\n"
+             "{code}\n"
+             "```\n\n"
+             "Function Inputs:\n"
+             "{inputs}\n\n"
+             "Please put your answer in the <ans></ans> tags"
+             )
+        self.pt_template_input = \
+            ("Given the following {lang} code snippet and output of the code, "
+             "what will be the input of the code given the output value?\n\n"
+             "Code Snippet\n"
+             "```{lang}\n"
+             "{code}\n"
+             "```\n\n"
+             "Function Output:\n"
+             "{outputs}\n\n"
+             "Please put your answer in the <ans></ans> tags"
+             )
+        self.pt_template_loop_iteration = \
+            ("Given the following {lang} code snippet with function call showing the input of the code,\n\n"
+             "Code Snippet\n"
+             "```{lang}\n"
+             "{code}\n"
+             "```\n\n"
+             "Question:\n"
+             "{question}\n\n"
+             "Please put your answer in the <ans></ans> tags"
+             )
+        self.pt_template_loop_body = \
+            ("Given the following {lang} code snippet with function call showing the input of the code,\n\n"
+             "Code Snippet\n"
+             "```{lang}\n"
+             "{code}\n"
+             "```\n\n"
+             "Question:\n"
+             "{question}\n\n"
+             "Please put your answer in the <ans></ans> tags"
+             )
+        self.pt_template_alias = \
+            ("Given the following {lang} code snippet and its input parameters:\n\n"
+            "You are given two pointer variables in the code:\n"
+            "- Pointer A: {pointer_1} (line {line_1})\n"
+            "- Pointer B: {pointer_2} (line {line_2})\n\n"
+            "Determine if these pointers are aliases (reference the same memory address).\n"
+            "Respond with:\n"
+            "- \"Yes\" if they point to the same memory location\n"
+            "- \"No\" if they point to different locations\n\n"
+            "Code:\n"
+            "```{lang}\n"
+            "{code}\n"
+            "```\n\n"
+            "Function Input:\n"
+            "{input}\n\n"
+            "Question:\n"
+            "Do {pointer_1} (line {line_1}) and {pointer_2} (line {line_2}) alias the same memory address?\n\n"
+            "Provide your answer within <ans></ans> tags.")
 
 
     def task2msg(self, task):
@@ -73,8 +134,46 @@ class StatementPt1(AbstPt):
 
     def task2pt(self, task: dict ):
         is_block_based = 'Block_Size' in task
+        
+        if self.args.prediction == "output":
+            pt = self.pt_template_output.format(
+                lang=self.args.language.lower(),
+                code=task['code'],
+                inputs=task['input'],
+            )
+        elif self.args.prediction == "input":
+            pt = self.pt_template_input.format(
+                lang=self.args.language.lower(),
+                code=task['code'],
+                outputs=task['output'],
+            )
+        elif self.args.prediction == "loop":
+            if self.args.settings == "iteration":
+                pt = self.pt_template_loop_iteration.format(
+                    lang=self.args.language.lower(),
+                    code=task['loop_code'],
+                    question=task['question'],
+                )
+            elif self.args.settings == "body":
+                pt = self.pt_template_loop_body.format(
+                    lang=self.args.language.lower(),
+                    code=task['loop_code'],
+                    question=task['question'],
+                )
+        elif self.args.prediction == "alias":
+            pt = self.pt_template_alias.format(
+                lang=self.args.language.lower(),
+                code=task['Source Code'],
+                input= task['Function Input'],
+                pointer_1 = task['Selected Pointer'],
+                line_1 = task['Selected Statement'],
+                pointer_2 = task['Compared Pointer'],
+                line_2 = task['Compared Statement'],
+                
+            )
             
-        if is_block_based:
+            
+        elif is_block_based:
             pt = self.pt_template_block.format(
                 lang=task['Programming Language'].lower(),
                 code=task['Source Code'],

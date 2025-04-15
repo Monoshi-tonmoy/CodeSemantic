@@ -20,45 +20,72 @@ def load_existing_results(filename='all_results.json'):
     except (FileNotFoundError, json.JSONDecodeError):
         return {}
 
-def save_results_to_json(model_name, pt_id, language, overall_accuracy, 
+def save_results_to_json(args, model_name, pt_id, language, overall_accuracy, 
                         type_accuracy, detailed_results, 
-                        filename='all_results.json', is_block_based=False):
+                        filename=None, is_block_based=False,
+                        prediction_type=None):
     """Save results to JSON in Results folder, preserving existing data"""
     os.makedirs('Results', exist_ok=True)
     
-    if is_block_based:
-        filename = 'block_results_10.json'
+
+    if filename is None:
+        if prediction_type in ['input', 'output']:
+            filename = "input_output_predictions.json"
+        elif args.prediction == "loop":
+            filename = "loop_predictions.json"
+        elif args.prediction == "alias":
+            filename = "alias_predictions.json"
+        elif is_block_based:
+            filename = 'block_predictions.json'
+        else:
+            filename = 'all_results.json'
     
     results_path = os.path.join('Results', filename)
-    
     existing_results = load_existing_results(results_path)
     
     if model_name not in existing_results:
         existing_results[model_name] = {}
+    
     if f'pt{pt_id}' not in existing_results[model_name]:
         existing_results[model_name][f'pt{pt_id}'] = {}
     
-    result_entry = {
-        'overall_accuracy': overall_accuracy,
-        'is_block_based': is_block_based
-    }
+    if language not in existing_results[model_name][f'pt{pt_id}']:
+        existing_results[model_name][f'pt{pt_id}'][language] = {}
     
-    if is_block_based:
-        # detailed_results already contains the properly structured data
-        result_entry.update({
+    if prediction_type in ['input', 'output']:
+        result_entry = {
+            'overall_accuracy': overall_accuracy,
+        }
+        existing_results[model_name][f'pt{pt_id}'][language][prediction_type] = result_entry
+    elif prediction_type == "loop":
+        result_entry = {
+            'overall_accuracy': overall_accuracy,
+        }
+        existing_results[model_name][f'pt{pt_id}'][language][args.settings] = result_entry
+    elif prediction_type == "alias":
+        result_entry = {
+            'overall_accuracy': overall_accuracy,
+        }
+        existing_results[model_name][f'pt{pt_id}'][language] = result_entry
+    
+    elif is_block_based:
+        result_entry = {
+            'overall_accuracy': overall_accuracy,
             'block_results': detailed_results,
             'sample_counts': {
                 size: results['total']
                 for size, results in detailed_results.items()
             }
-        })
+        }
+        existing_results[model_name][f'pt{pt_id}'][language] = result_entry
+    
     else:
-        result_entry.update({
+        result_entry = {
+            'overall_accuracy': overall_accuracy,
             'type_accuracy': type_accuracy,
             'type_counts': detailed_results
-        })
-    
-    existing_results[model_name][f'pt{pt_id}'][language] = result_entry
+        }
+        existing_results[model_name][f'pt{pt_id}'][language] = result_entry
     
     with open(results_path, 'w') as f:
         json.dump(existing_results, f, indent=2)
@@ -131,6 +158,21 @@ def load_my_dataset(data_id):
     elif data_id == 4:
         with open("dataset/incremental_statement_prediction_python_10.jsonl", 'r') as f:
             dataset = [json.loads(line) for line in f]
+    elif data_id == 5:
+        with open("dataset/input_output_dataset_python.jsonl", 'r') as f:
+            dataset = [json.loads(line) for line in f]
+    elif data_id == 6:
+        with open("dataset/loop_iteration_dataset_python.jsonl", 'r') as f:
+            dataset = [json.loads(line) for line in f]
+    elif data_id == 7:
+        with open("dataset/loop_body_dataset_python.jsonl", 'r') as f:
+            dataset = [json.loads(line) for line in f]
+    elif data_id == 8:
+        with open("dataset/loop_final_dataset_python.jsonl", 'r') as f:
+            dataset = [json.loads(line) for line in f]
+    elif data_id == 9:
+        with open("dataset/aliasing_dataset_c.jsonl", 'r') as f:
+            dataset = [json.loads(line) for line in f]
     else:
         raise NotImplementedError
     return dataset
@@ -155,6 +197,8 @@ def model_id2name_cls(model_id: int):
         14: ("deepseek-ai/DeepSeek-R1-Distill-Qwen-7B", LocalVLLM, "openai"),
         15: ("deepseek-ai/DeepSeek-R1-Distill-Llama-8B", LocalVLLM, "openai"),
         16: ("deepseek-ai/DeepSeek-R1-Distill-Qwen-14B", LocalVLLM, "openai"),
+        17: ("ibm-granite/granite-3.2-8b-instruct-preview", LocalVLLM, "openai"),
+        
     }
     
     if model_id not in model_map:
@@ -169,16 +213,16 @@ def load_model(model_id):
     model.model_name = model_name.split('/')[-1]
     return model
 
-def load_pt(pt_id):
+def load_pt(pt_id, args):
     pt_map = {
-        0: StatementPt1('pt1', demos=[]),
-        1: StatementPt2('pt2', demos=[]),
-        2: StatementPt3('pt3', demos=[])
+        0: lambda: StatementPt1('pt1', demos=[], args=args),
+        1: lambda: StatementPt2('pt2', demos=[], args=args),
+        2: lambda: StatementPt3('pt3', demos=[], args=args),
     }
     
     if pt_id not in pt_map:
         raise ValueError(f"PT ID {pt_id} is not valid")
-    return pt_map[pt_id]
+    return pt_map[pt_id]()  # Call the lambda to create instance
 
 
 def get_default_config():
