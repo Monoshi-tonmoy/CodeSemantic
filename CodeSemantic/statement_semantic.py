@@ -11,20 +11,9 @@ from utils import (
 )
 import torch
 import argparse
+from dataset_utils import select_shots_and_split_dataset
 
-def parse_arguments():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--data_id', type=int, required=True, help='Dataset ID to use')
-    parser.add_argument('--model_id', type=int, required=True, help='Model ID to evaluate')
-    parser.add_argument('--pt_id', type=int, required=True, help='Prompt template ID')
-    parser.add_argument('--language', type=str, default=None, help='Programming language filter')
-    parser.add_argument('--prediction', type=str, choices=['value', 'input', 'output', 'loop', 'alias'], 
-                       default='value', help='What to predict and evaluate against')
-    parser.add_argument('--settings', type=str, default='default', 
-                       help='Additional settings for evaluation')
-    return parser.parse_args()
-
-def evaluate_statement_based(res):
+def evaluate_statement_based(res, args):
     is_correct = []
     type_correct = defaultdict(int)
     type_total = defaultdict(int)
@@ -43,6 +32,8 @@ def evaluate_statement_based(res):
                     original_value = original_value.rstrip(';').strip()
                 if isinstance(predicted_value, str):
                     predicted_value = predicted_value.rstrip(';').strip()
+                    
+                #print(f"idx:{d['ori_task']['idx']},original_value:{original_value} and Model_prediction:{predicted_value}")
 
                 correct = original_value == predicted_value
                 is_correct.append(correct)
@@ -288,6 +279,25 @@ def evaluate_alias_based(res, args):
     print(overall_accuracy)
     return overall_accuracy, results, language
 
+def parse_arguments():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--data_id', type=int, required=True, help='Dataset ID to use')
+    parser.add_argument('--model_id', type=int, required=True, help='Model ID to evaluate')
+    parser.add_argument('--pt_id', type=int, required=True, help='Prompt template ID')
+    parser.add_argument('--language', type=str, default=None, help='Programming language filter')
+    parser.add_argument('--prediction', type=str, choices=['statement','block','input', 'output', 'loop', 'alias'], 
+                       default='value', help='What to predict and evaluate against')
+    parser.add_argument('--settings', type=str, default='default', 
+                       help='Additional settings for evaluation')
+    parser.add_argument('--shot', type=int, default=0, required= True, 
+                       help='Number of shots for prompt')
+    parser.add_argument('--incontext', type= str, default='different',choices=['same','different'], required= True, 
+                       help='incontext examples type')
+    parser.add_argument('--CoT', type= str, default='no',choices=['yes','no'], required= True, 
+                       help='Incontext with or without CoT')
+    
+    return parser.parse_args()
+
 
 def main():
     args = parse_arguments()
@@ -295,40 +305,52 @@ def main():
     dataset = load_my_dataset(args.data_id)
     model = load_model(args.model_id)
     model.init_ai_kwargs(config)
-    pt = load_pt(args.pt_id, args)
+    
+    incontext_example, remaining_dataset = select_shots_and_split_dataset(dataset, args)
+    
+    # for dic in remaining_dataset:
+    #     print(dic['idx'])
+    args.dataset = dataset # We need the dataset for 
+
+    
+    pt = load_pt(args.pt_id, demos=incontext_example if args.shot > 0 else None, args=args)
     
     
-    res = model.chat_batch(pt, dataset)
+    res = model.chat_batch(pt, remaining_dataset)
     
     
-    is_block_based = 'Block_Size' in dataset[0] if dataset else False
+    if args.prediction == "statement":
+        overall_accuracy, type_accuracy, type_total, language = evaluate_statement_based(res, args)
+        
+        save_results_to_json(
+            args, model.model_name, args.pt_id, language, 
+            overall_accuracy, type_accuracy, type_total
+        )
+        
     
     if args.prediction in ("input", "output"):
         overall_accuracy, io_results, language = evaluate_io_based(res, args)
         
         save_results_to_json(
             args, model.model_name, args.pt_id, language, 
-            overall_accuracy, None, io_results,
-            is_block_based=False, prediction_type = args.prediction
+            overall_accuracy, None, io_results
         )
     elif args.prediction == "loop":
         overall_accuracy, loop_results, language = evaluate_loop_based(res, args)
         
         save_results_to_json(
             args, model.model_name, args.pt_id, language, 
-            overall_accuracy, None, loop_results,
-            is_block_based=False, prediction_type = args.prediction
+            overall_accuracy, None, loop_results
         )
     elif args.prediction == "alias":
         overall_accuracy, loop_results, language = evaluate_alias_based(res, args)
         
         save_results_to_json(
             args, model.model_name, args.pt_id, language, 
-            overall_accuracy, None, loop_results,
-            is_block_based=False, prediction_type = args.prediction
+            overall_accuracy, None, loop_results
         )
     
-    elif is_block_based:
+    elif args.prediction == "block":
         overall_accuracy, block_results, language = evaluate_block_based(res)
         
         save_results_to_json(
@@ -341,18 +363,6 @@ def main():
         print(f"  Overall accuracy: {overall_accuracy:.2f}")
         for block_size, results in sorted(block_results.items()):
             print(f"  Block size {block_size}: {results['accuracy']:.2f} ({results['total']} samples)")
-    else:
-        overall_accuracy, type_accuracy, type_total, language = evaluate_statement_based(res)
-        
-        save_results_to_json(
-            model.model_name, pt_id, language, 
-            overall_accuracy, type_accuracy, type_total
-        )
-        
-        print(f"Results for {model.model_name} (PT {pt_id}, {language}):")
-        print(f"  Overall accuracy: {overall_accuracy:.2f}")
-        for stmt_type, acc in type_accuracy.items():
-            print(f"  {stmt_type}: {acc:.2f} ({type_total[stmt_type]} samples)")
 
 def clear_hf_cache():
     cache_path = "/home/monoshi/.cache/huggingface/hub/*"

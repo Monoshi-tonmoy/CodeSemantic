@@ -112,3 +112,69 @@ if len(MODELS_TO_PLOT) > 5:
 plt.tight_layout()
 plt.savefig(BOX_PLOT_PATH, dpi=300, bbox_inches='tight')
 plt.close()
+
+# =============================================
+# 3. BLOCK LEVEL STATISTICS (Blocks 1 & 2)
+# =============================================
+def plot_block_comparison(data, models_to_plot, languages, save_path='Results/block_1_2_comparison.png'):
+    # Prepare data
+    block1_acc = []
+    block2_acc = []
+    valid_models = []
+    
+    for model in models_to_plot:
+        if 'pt0' not in data[model]:
+            continue
+            
+        # Average accuracy across languages for each block
+        b1_acc = []
+        b2_acc = []
+        for language in languages:
+            if language in data[model]['pt0']:
+                blocks = data[model]['pt0'][language]['block_results']
+                if '1' in blocks:
+                    b1_acc.append(blocks['1']['accuracy'])
+                if '2' in blocks:
+                    b2_acc.append(blocks['2']['accuracy'])
+        
+        if b1_acc and b2_acc:  # Only include models with both block sizes
+            block1_acc.append(np.mean(b1_acc) * 100)
+            block2_acc.append(np.mean(b2_acc) * 100)
+            valid_models.append(model)
+    
+    # Plotting
+    fig, ax = plt.subplots(figsize=(12, 6))
+    bar_width = 0.35
+    x = np.arange(len(valid_models))
+    
+    # Bars for Block 1 and Block 2
+    b1 = ax.bar(x - bar_width/2, block1_acc, bar_width, 
+                label='Block 1', color='#1f77b4', edgecolor='white')
+    b2 = ax.bar(x + bar_width/2, block2_acc, bar_width, 
+                label='Block 2', color='#ff7f0e', edgecolor='white')
+    
+    # Customization
+    ax.set_title('Model Accuracy Comparison: Block 1 vs Block 2', fontsize=14)
+    ax.set_xlabel('Model', fontsize=12)
+    ax.set_ylabel('Accuracy (%)', fontsize=12)
+    ax.set_xticks(x)
+    ax.set_xticklabels(valid_models, rotation=45, ha='right')
+    ax.legend()
+    ax.grid(axis='y', alpha=0.3)
+    ax.set_ylim(0, 100)
+    
+    # Add value labels on top of bars
+    for bars in [b1, b2]:
+        for bar in bars:
+            height = bar.get_height()
+            ax.annotate(f'{height:.1f}%',
+                        xy=(bar.get_x() + bar.get_width() / 2, height),
+                        xytext=(0, 3), textcoords="offset points",
+                        ha='center', va='bottom', fontsize=9)
+    
+    plt.tight_layout()
+    plt.savefig(save_path, dpi=300, bbox_inches='tight')
+    plt.show()
+
+# Usage
+plot_block_comparison(data, MODELS_TO_PLOT, LANGUAGES)

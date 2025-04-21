@@ -21,27 +21,33 @@ def load_existing_results(filename='all_results.json'):
         return {}
 
 def save_results_to_json(args, model_name, pt_id, language, overall_accuracy, 
-                        type_accuracy, detailed_results, 
-                        filename=None, is_block_based=False,
-                        prediction_type=None):
+                        type_accuracy, detailed_results):
     """Save results to JSON in Results folder, preserving existing data"""
-    os.makedirs('Results', exist_ok=True)
     
+    if args.prediction in ['input', 'output']:
+        results_dir = 'Results_input_output' 
+    else:
+        results_dir = f'Results_{args.prediction}' 
+    
+    os.makedirs(results_dir, exist_ok=True)
 
-    if filename is None:
-        if prediction_type in ['input', 'output']:
-            filename = "input_output_predictions.json"
-        elif args.prediction == "loop":
-            filename = "loop_predictions.json"
-        elif args.prediction == "alias":
-            filename = "alias_predictions.json"
-        elif is_block_based:
-            filename = 'block_predictions.json'
-        else:
-            filename = 'all_results.json'
+    if args.prediction in ['input', 'output']:
+        filename = "input_output_predictions.json"
+    elif args.prediction == "loop":
+        filename = "loop_predictions.json"
+    elif args.prediction == "alias":
+        filename = "alias_predictions.json"
+    elif args.prediction == "block":
+        filename = 'block_predictions.json'
+    elif args.prediction == "statement":
+        filename = 'statement_predictions.json'
+    else:
+        filename = 'all_results.json'
     
-    results_path = os.path.join('Results', filename)
+    results_path = os.path.join(results_dir, filename)
     existing_results = load_existing_results(results_path)
+    
+    shot = str(args.shot)
     
     if model_name not in existing_results:
         existing_results[model_name] = {}
@@ -51,24 +57,35 @@ def save_results_to_json(args, model_name, pt_id, language, overall_accuracy,
     
     if language not in existing_results[model_name][f'pt{pt_id}']:
         existing_results[model_name][f'pt{pt_id}'][language] = {}
+        
+    if args.prediction not in existing_results[model_name][f'pt{pt_id}'][language]:
+        existing_results[model_name][f'pt{pt_id}'][language][args.prediction] = {}
     
-    if prediction_type in ['input', 'output']:
+    if args.prediction in ['input', 'output']:
+        if shot not in existing_results[model_name][f'pt{pt_id}'][language][args.prediction]:
+            existing_results[model_name][f'pt{pt_id}'][language][args.prediction][shot] = {}
+            
         result_entry = {
             'overall_accuracy': overall_accuracy,
         }
-        existing_results[model_name][f'pt{pt_id}'][language][prediction_type] = result_entry
-    elif prediction_type == "loop":
+        existing_results[model_name][f'pt{pt_id}'][language][args.prediction][shot] = result_entry
+    elif args.prediction == "loop":
+        if shot not in existing_results[model_name][f'pt{pt_id}'][language][args.prediction]:
+            existing_results[model_name][f'pt{pt_id}'][language][args.prediction][shot] = {}
         result_entry = {
             'overall_accuracy': overall_accuracy,
         }
-        existing_results[model_name][f'pt{pt_id}'][language][args.settings] = result_entry
-    elif prediction_type == "alias":
+        existing_results[model_name][f'pt{pt_id}'][language][shot][args.prediction][args.settings] = result_entry
+    elif args.prediction == "alias":
+        if args.prediction not in existing_results[model_name][f'pt{pt_id}'][language][shot]:
+            existing_results[model_name][f'pt{pt_id}'][language][shot][args.prediction] = {}
         result_entry = {
             'overall_accuracy': overall_accuracy,
         }
-        existing_results[model_name][f'pt{pt_id}'][language] = result_entry
-    
-    elif is_block_based:
+        existing_results[model_name][f'pt{pt_id}'][language][shot][args.prediction] = result_entry
+    elif args.prediction == "block":
+        if args.prediction not in existing_results[model_name][f'pt{pt_id}'][language][shot]:
+            existing_results[model_name][f'pt{pt_id}'][language][shot][args.prediction] = {}
         result_entry = {
             'overall_accuracy': overall_accuracy,
             'block_results': detailed_results,
@@ -77,42 +94,35 @@ def save_results_to_json(args, model_name, pt_id, language, overall_accuracy,
                 for size, results in detailed_results.items()
             }
         }
-        existing_results[model_name][f'pt{pt_id}'][language] = result_entry
-    
-    else:
+        existing_results[model_name][f'pt{pt_id}'][language][shot][args.prediction] = result_entry
+        
+    elif args.prediction == "statement":
         result_entry = {
             'overall_accuracy': overall_accuracy,
             'type_accuracy': type_accuracy,
             'type_counts': detailed_results
         }
-        existing_results[model_name][f'pt{pt_id}'][language] = result_entry
+        shot_key = f"shot{shot}"
+        cot_key = f"CoT_{args.CoT}"
+        incontext_key = f"Incontext_{args.incontext}"
+
+        if shot_key not in existing_results[model_name][f'pt{pt_id}'][language][args.prediction]:
+            existing_results[model_name][f'pt{pt_id}'][language][args.prediction][shot_key] = {}
+        
+        if args.shot == 0:
+            existing_results[model_name][f'pt{pt_id}'][language][args.prediction][shot_key] = result_entry
+
+        else:
+            if cot_key not in existing_results[model_name][f'pt{pt_id}'][language][args.prediction][shot_key]:
+                existing_results[model_name][f'pt{pt_id}'][language][args.prediction][shot_key][cot_key] = {}
+
+            if incontext_key not in existing_results[model_name][f'pt{pt_id}'][language][args.prediction][shot_key][cot_key]:
+                existing_results[model_name][f'pt{pt_id}'][language][args.prediction][shot_key][cot_key][incontext_key] = {}
+            existing_results[model_name][f'pt{pt_id}'][language][args.prediction][shot_key][cot_key][incontext_key] = result_entry
     
     with open(results_path, 'w') as f:
         json.dump(existing_results, f, indent=2)
 
-def load_results_for_model(model_name, is_block_based=False):
-    """Load results for a specific model from the appropriate file"""
-    filename = 'block_results.json' if is_block_based else 'all_results.json'
-    results_path = os.path.join('Results', filename)
-    
-    try:
-        with open(results_path, 'r') as f:
-            all_results = json.load(f)
-            return all_results.get(model_name, {})
-    except (FileNotFoundError, json.JSONDecodeError):
-        return {}
-
-def get_available_models(is_block_based=False):
-    """Get list of models that have results in the specified file"""
-    filename = 'block_results.json' if is_block_based else 'all_results.json'
-    results_path = os.path.join('Results', filename)
-    
-    try:
-        with open(results_path, 'r') as f:
-            all_results = json.load(f)
-            return list(all_results.keys())
-    except (FileNotFoundError, json.JSONDecodeError):
-        return []
 
 def serialize_vllm_objects(obj):
     """Recursively convert VLLM objects to serializable formats"""
@@ -197,8 +207,7 @@ def model_id2name_cls(model_id: int):
         14: ("deepseek-ai/DeepSeek-R1-Distill-Qwen-7B", LocalVLLM, "openai"),
         15: ("deepseek-ai/DeepSeek-R1-Distill-Llama-8B", LocalVLLM, "openai"),
         16: ("deepseek-ai/DeepSeek-R1-Distill-Qwen-14B", LocalVLLM, "openai"),
-        17: ("ibm-granite/granite-3.2-8b-instruct-preview", LocalVLLM, "openai"),
-        
+        17: ("ibm-granite/granite-3.2-8b-instruct-preview", LocalVLLM, "openai"), 
     }
     
     if model_id not in model_map:
@@ -213,11 +222,14 @@ def load_model(model_id):
     model.model_name = model_name.split('/')[-1]
     return model
 
-def load_pt(pt_id, args):
+def load_pt(pt_id, demos=None, args=None):
+    if demos is None:
+        demos = []
+    
     pt_map = {
-        0: lambda: StatementPt1('pt1', demos=[], args=args),
-        1: lambda: StatementPt2('pt2', demos=[], args=args),
-        2: lambda: StatementPt3('pt3', demos=[], args=args),
+        0: lambda: StatementPt1('pt1', demos=demos, args=args),
+        1: lambda: StatementPt2('pt2', demos=demos, args=args),
+        2: lambda: StatementPt3('pt3', demos=demos, args=args),
     }
     
     if pt_id not in pt_map:
