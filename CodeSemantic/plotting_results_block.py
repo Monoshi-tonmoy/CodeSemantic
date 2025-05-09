@@ -116,45 +116,50 @@ plt.close()
 # =============================================
 # 3. BLOCK LEVEL STATISTICS (Blocks 1 & 2)
 # =============================================
-def plot_block_comparison(data, models_to_plot, languages, save_path='Results/block_1_2_comparison.png'):
-    # Prepare data
-    block1_acc = []
-    block2_acc = []
+def plot_block_comparison(data, models_to_plot, languages, save_path='Results/block_1_3_comparison.png'):
+    block_ids = ['1', '2', '3']
+    block_accs = {block: [] for block in block_ids}
     valid_models = []
-    
+
     for model in models_to_plot:
         if 'pt0' not in data[model]:
             continue
-            
-        # Average accuracy across languages for each block
-        b1_acc = []
-        b2_acc = []
+
+        block_avg = {block: [] for block in block_ids}
+
         for language in languages:
             if language in data[model]['pt0']:
                 blocks = data[model]['pt0'][language]['block_results']
-                if '1' in blocks:
-                    b1_acc.append(blocks['1']['accuracy'])
-                if '2' in blocks:
-                    b2_acc.append(blocks['2']['accuracy'])
-        
-        if b1_acc and b2_acc:  # Only include models with both block sizes
-            block1_acc.append(np.mean(b1_acc) * 100)
-            block2_acc.append(np.mean(b2_acc) * 100)
+                for block in block_ids:
+                    if block in blocks:
+                        block_avg[block].append(blocks[block]['accuracy'])
+
+        # Only keep model if it has data for all 5 blocks
+        if all(block_avg[block] for block in block_ids):
             valid_models.append(model)
-    
+            for block in block_ids:
+                block_accs[block].append(np.mean(block_avg[block]) * 100)
+
     # Plotting
-    fig, ax = plt.subplots(figsize=(12, 6))
-    bar_width = 0.35
+    fig, ax = plt.subplots(figsize=(14, 6))
+    num_blocks = len(block_ids)
     x = np.arange(len(valid_models))
-    
-    # Bars for Block 1 and Block 2
-    b1 = ax.bar(x - bar_width/2, block1_acc, bar_width, 
-                label='Block 1', color='#1f77b4', edgecolor='white')
-    b2 = ax.bar(x + bar_width/2, block2_acc, bar_width, 
-                label='Block 2', color='#ff7f0e', edgecolor='white')
-    
-    # Customization
-    ax.set_title('Model Accuracy Comparison: Block 1 vs Block 2', fontsize=14)
+    total_width = 0.8
+    bar_width = total_width / num_blocks
+
+    colors = ['#1f77b4', '#ff7f0e', '#2ca02c']
+
+    for i, block in enumerate(block_ids):
+        bars = ax.bar(x + i * bar_width - total_width / 2 + bar_width / 2,
+                      block_accs[block], bar_width, label=f'Block {block}',
+                      color=colors[i % len(colors)], edgecolor='white')
+        for bar in bars:
+            height = bar.get_height()
+            ax.annotate(f'{height:.1f}%', xy=(bar.get_x() + bar.get_width() / 2, height),
+                        xytext=(0, 3), textcoords="offset points",
+                        ha='center', va='bottom', fontsize=8)
+
+    ax.set_title('Model Accuracy Comparison: Block 1 to Block 3', fontsize=14)
     ax.set_xlabel('Model', fontsize=12)
     ax.set_ylabel('Accuracy (%)', fontsize=12)
     ax.set_xticks(x)
@@ -162,16 +167,7 @@ def plot_block_comparison(data, models_to_plot, languages, save_path='Results/bl
     ax.legend()
     ax.grid(axis='y', alpha=0.3)
     ax.set_ylim(0, 100)
-    
-    # Add value labels on top of bars
-    for bars in [b1, b2]:
-        for bar in bars:
-            height = bar.get_height()
-            ax.annotate(f'{height:.1f}%',
-                        xy=(bar.get_x() + bar.get_width() / 2, height),
-                        xytext=(0, 3), textcoords="offset points",
-                        ha='center', va='bottom', fontsize=9)
-    
+
     plt.tight_layout()
     plt.savefig(save_path, dpi=300, bbox_inches='tight')
     plt.show()

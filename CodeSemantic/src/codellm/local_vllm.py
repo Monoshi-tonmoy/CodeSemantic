@@ -27,8 +27,8 @@ class LocalVLLM(AbstLLM):
         self.llm = LLM(
             model=model,
             trust_remote_code=True,
-            max_model_len=2048,
-            # dtype=torch.bfloat16,
+            max_model_len = 4096,
+            # dtype=torch.float16,
             # quantization="bitsandbytes",
             # load_format="bitsandbytes",
             # hf_overrides={"quantization_config": 
@@ -39,7 +39,7 @@ class LocalVLLM(AbstLLM):
             # }
         )
 
-        self.sampling_params = None
+        self.sampling_params = None 
         self.dtype = None
         self.lora_request = None
 
@@ -50,7 +50,7 @@ class LocalVLLM(AbstLLM):
         self.sampling_params = SamplingParams(
             temperature=self.temperature,
             top_p=self.top_p,
-            max_tokens=self.max_tokens,
+            max_tokens=self.max_tokens, # Let's set these two parameters
             stop_token_ids=self.stop_token_ids,
             logprobs=self.logprobs,
             stop=self.stop

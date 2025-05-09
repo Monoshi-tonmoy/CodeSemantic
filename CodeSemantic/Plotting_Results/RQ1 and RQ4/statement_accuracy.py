@@ -1,0 +1,202 @@
+import json
+import pandas as pd
+import matplotlib.pyplot as plt
+import numpy as np
+import seaborn as sns
+
+# Set professional style
+sns.set_style("whitegrid")
+plt.rcParams['figure.facecolor'] = 'white'
+plt.rcParams['axes.facecolor'] = 'white'
+
+REASONING_MODELS = {
+    "DeepSeek-R1-Distill-Qwen-7B",
+    "DeepSeek-R1-Distill-Llama-8B",
+    "DeepSeek-R1-Distill-Qwen-14B",
+    "granite-3.2-8b-instruct",
+    "granite-3.2-8b-instruct-preview",
+}
+
+# Load and process data
+data = []
+with open("/home/monoshi/CodeSemantic/CodeSemantic/statement_Accuracy_Results/statement_results.jsonl", "r") as f:
+    for line in f:
+        data.append(json.loads(line))
+
+type_acc = []
+count = 0
+for record in data:
+    if (record.get("CoT") == "no" and 
+        record.get("shot") == 0 and 
+        record.get("Incontext") == "different"):
+        count += 1
+        for typ, acc in record["type_accuracy"].items():
+            type_acc.append({
+                "Type": typ,
+                "Accuracy": acc,
+                "Model": record["Model"],
+                "CoT": record["CoT"],
+                "Quant": record["quantization"],
+                "shot": record.get("shot"),
+                "Incontext": record.get("Incontext")
+            })
+print(count)
+type_df = pd.DataFrame(type_acc)
+
+# Define label mapping
+def map_labels(label):
+    label_mapping = {
+        "API": "Function Call",
+        "Assignment": "Variable Assignment",
+        "Arithmetic Assignment": "Arithmetic",
+    }
+    return label_mapping.get(label, label)
+
+# Apply label mapping to the DataFrame
+type_df['Type'] = type_df['Type'].apply(map_labels)
+
+# 1. Create combined average accuracy plot
+plt.figure(figsize=(12, 6))
+
+combined_avg = type_df.groupby(["Type", "Quant"])["Accuracy"].mean().unstack()
+combined_avg = combined_avg.rename(columns={"yes": "Quantized", "no": "Non-Quantized"})
+
+x = np.arange(len(combined_avg))
+width = 0.35
+
+rects1 = plt.bar(x - width/2, combined_avg["Quantized"], width, 
+                label='Quantized', color='#4e79a7', edgecolor='black')
+rects2 = plt.bar(x + width/2, combined_avg["Non-Quantized"], width, 
+                label='Non-Quantized', color='#f28e2b', edgecolor='black')
+
+plt.xlabel("Statement Type")
+plt.ylabel("Average Accuracy")
+plt.title("Average Accuracy by Statement Type and Quantization")
+plt.xticks(x, combined_avg.index, rotation=45, ha='right')
+plt.ylim(0, 1.0)
+plt.legend()
+
+plt.grid(axis="y", linestyle="--", alpha=0.7)
+plt.tight_layout()
+plt.savefig("combined_average_statement_accuracy_0_shot.png", dpi=300, bbox_inches="tight")
+plt.show()
+
+# 2. Individual average accuracy plots
+for quant in ["yes", "no"]:
+    quant_label = "Quantized" if quant == "yes" else "Non-Quantized"
+    quant_df = type_df[type_df["Quant"] == quant]
+    avg_type_acc = quant_df.groupby("Type")["Accuracy"].mean().sort_values()
+    
+    plt.figure(figsize=(10, 6))
+    
+    bars = plt.bar(avg_type_acc.index, avg_type_acc.values, width=0.8,
+                  color='#4e79a7' if quant == "yes" else '#f28e2b', 
+                  edgecolor='black')
+    
+    plt.xlabel("Statement Type")
+    plt.ylabel("Average Accuracy")
+    plt.title(f"Average Accuracy by Statement Type ({quant_label})")
+    plt.xticks(rotation=45, ha='right')
+    plt.ylim(0, 1.0)
+    
+    for bar in bars:
+        height = bar.get_height()
+        plt.text(bar.get_x() + bar.get_width()/2., height,
+                f'{height:.2f}', ha='center', va='bottom', fontsize=9)
+    
+    plt.grid(axis="y", linestyle="--", alpha=0.7)
+    plt.tight_layout()
+    plt.savefig(f"average_statement_accuracy_quant_{quant}_0_shot.png", dpi=300, bbox_inches="tight")
+    plt.show()
+
+# 3. Model-specific plots
+for quant in ["yes", "no"]:
+    quant_label = "Quantized" if quant == "yes" else "Non-Quantized"
+    quant_df = type_df[type_df["Quant"] == quant]
+    
+    # Split models into reasoning and non-reasoning groups
+    models = quant_df['Model'].unique()
+    reasoning_models = [m for m in models if m in REASONING_MODELS]
+    non_reasoning_models = [m for m in models if m not in REASONING_MODELS]
+    
+    # Combine with non-reasoning first, then reasoning
+    sorted_models = non_reasoning_models + reasoning_models
+    
+    # Filter and sort the dataframe
+    quant_df = quant_df[quant_df['Model'].isin(sorted_models)]
+    quant_df['Model'] = pd.Categorical(quant_df['Model'], categories=sorted_models, ordered=True)
+    
+    avg_acc = quant_df.groupby(["Model", "Type"])["Accuracy"].mean().unstack()
+    
+    plt.figure(figsize=(14, 7))
+    
+    colors = sns.color_palette("Paired", len(avg_acc.columns))
+    
+    n_models = len(avg_acc.index)
+    n_types = len(avg_acc.columns)
+    bar_width = 0.8/n_types
+    x = np.arange(n_models)
+    
+    # Create lists to store handles for legend
+    reasoning_handles = []
+    non_reasoning_handles = []
+    
+    for i, stype in enumerate(avg_acc.columns):
+        for j, model in enumerate(avg_acc.index):
+            is_reasoning = model in REASONING_MODELS
+            hatch = '///' if is_reasoning else None
+            edgecolor = 'red' if is_reasoning else 'black'
+            alpha = 1.0 if is_reasoning else 0.8
+            
+            bar = plt.bar(x[j] + i*bar_width, avg_acc[stype][j], 
+                        width=bar_width, 
+                        color=colors[i],
+                        edgecolor=edgecolor,
+                        hatch=hatch,
+                        alpha=alpha)
+            
+            # Store first bar of each type for legend
+            if j == 0:
+                if is_reasoning:
+                    reasoning_handles.append(bar)
+                else:
+                    non_reasoning_handles.append(bar)
+    
+    # # Add a vertical line to separate reasoning and non-reasoning models
+    # if non_reasoning_models:  # Only add if there are non-reasoning models
+    #     sep_pos = len(non_reasoning_models) - 0.5
+    #     plt.axvline(x=sep_pos, color='gray', linestyle='--', linewidth=1)
+    #     plt.text(sep_pos, 1.02, 'Non-Reasoning → Reasoning', 
+    #             transform=plt.gca().get_xaxis_transform(),
+    #             ha='center', va='bottom', color='gray')
+    
+    # Custom legend
+    from matplotlib.patches import Patch
+    
+    # Create legend elements
+    legend_elements = []
+    
+    # Add statement type legend items
+    for i, stype in enumerate(avg_acc.columns):
+        legend_elements.append(Patch(facecolor=colors[i], label=stype))
+    
+    # Add reasoning model indicators
+    legend_elements.append(Patch(facecolor='white', edgecolor='red', 
+                             hatch='///', label='Reasoning Model'))
+    legend_elements.append(Patch(facecolor='white', edgecolor='black', 
+                             label='Non-Reasoning Model'))
+    
+    plt.xlabel("Model")
+    plt.ylabel("Average Accuracy")
+    plt.title(f"Accuracy by Model and Statement Type ({quant_label})")
+    plt.xticks(x + (n_types-1)*bar_width/2, avg_acc.index, rotation=45, ha='right')
+    plt.ylim(0, 1.0)
+    
+    # Create legend
+    plt.legend(handles=legend_elements, title="Legend", 
+              bbox_to_anchor=(1.05, 1), loc='upper left')
+    
+    plt.grid(axis="y", linestyle='--', alpha=0.7)
+    plt.tight_layout()
+    plt.savefig(f"model_statement_accuracy_quant_{quant}_0_shot.png", dpi=300, bbox_inches="tight")
+    plt.show()

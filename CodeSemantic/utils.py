@@ -25,9 +25,9 @@ def save_results_to_json(args, model_name, pt_id, language, overall_accuracy,
     """Save results to JSON in Results folder, preserving existing data"""
     
     if args.prediction in ['input', 'output']:
-        results_dir = 'Results_input_output' 
+        results_dir = 'Results_input_output_q' 
     else:
-        results_dir = f'Results_{args.prediction}' 
+        results_dir = f'Results_{args.prediction}_q' 
     
     os.makedirs(results_dir, exist_ok=True)
 
@@ -48,44 +48,53 @@ def save_results_to_json(args, model_name, pt_id, language, overall_accuracy,
     existing_results = load_existing_results(results_path)
     
     shot = str(args.shot)
+    quantized_key = f'quantized_{args.quantized_prediction}'
     
     if model_name not in existing_results:
         existing_results[model_name] = {}
-    
-    if f'pt{pt_id}' not in existing_results[model_name]:
-        existing_results[model_name][f'pt{pt_id}'] = {}
-    
-    if language not in existing_results[model_name][f'pt{pt_id}']:
-        existing_results[model_name][f'pt{pt_id}'][language] = {}
         
-    if args.prediction not in existing_results[model_name][f'pt{pt_id}'][language]:
-        existing_results[model_name][f'pt{pt_id}'][language][args.prediction] = {}
+    if quantized_key not in existing_results[model_name]:
+        existing_results[model_name][quantized_key] = {}
     
+    if f'pt{pt_id}' not in existing_results[model_name][quantized_key]:
+        existing_results[model_name][quantized_key][f'pt{pt_id}'] = {}
+    
+    if language not in existing_results[model_name][quantized_key][f'pt{pt_id}']:
+        existing_results[model_name][quantized_key][f'pt{pt_id}'][language] = {}
+        
+    if args.prediction not in existing_results[model_name][quantized_key][f'pt{pt_id}'][language]:
+        existing_results[model_name][quantized_key][f'pt{pt_id}'][language][args.prediction] = {}
+    
+
     if args.prediction in ['input', 'output']:
-        if shot not in existing_results[model_name][f'pt{pt_id}'][language][args.prediction]:
-            existing_results[model_name][f'pt{pt_id}'][language][args.prediction][shot] = {}
+        shot_key = f"shot{args.shot}"
+        if shot not in existing_results[model_name][quantized_key][f'pt{pt_id}'][language][args.prediction]:
+            existing_results[model_name][quantized_key][f'pt{pt_id}'][language][args.prediction][shot_key] = {}
             
         result_entry = {
             'overall_accuracy': overall_accuracy,
         }
-        existing_results[model_name][f'pt{pt_id}'][language][args.prediction][shot] = result_entry
+        existing_results[model_name][quantized_key][f'pt{pt_id}'][language][args.prediction][shot_key] = result_entry
+    
     elif args.prediction == "loop":
-        if shot not in existing_results[model_name][f'pt{pt_id}'][language][args.prediction]:
-            existing_results[model_name][f'pt{pt_id}'][language][args.prediction][shot] = {}
+        if shot not in existing_results[model_name][quantized_key][f'pt{pt_id}'][language][args.prediction]:
+            existing_results[model_name][quantized_key][f'pt{pt_id}'][language][args.prediction][shot] = {}
+        
         result_entry = {
             'overall_accuracy': overall_accuracy,
         }
-        existing_results[model_name][f'pt{pt_id}'][language][shot][args.prediction][args.settings] = result_entry
+        existing_results[model_name][quantized_key][f'pt{pt_id}'][language][args.prediction][shot][args.settings] = result_entry
+    
     elif args.prediction == "alias":
-        if args.prediction not in existing_results[model_name][f'pt{pt_id}'][language][shot]:
-            existing_results[model_name][f'pt{pt_id}'][language][shot][args.prediction] = {}
+        if shot not in existing_results[model_name][quantized_key][f'pt{pt_id}'][language]:
+            existing_results[model_name][quantized_key][f'pt{pt_id}'][language][shot] = {}
+            
         result_entry = {
             'overall_accuracy': overall_accuracy,
         }
-        existing_results[model_name][f'pt{pt_id}'][language][shot][args.prediction] = result_entry
+        existing_results[model_name][quantized_key][f'pt{pt_id}'][language][shot][args.prediction] = result_entry
+    
     elif args.prediction == "block":
-        if args.prediction not in existing_results[model_name][f'pt{pt_id}'][language][shot]:
-            existing_results[model_name][f'pt{pt_id}'][language][shot][args.prediction] = {}
         result_entry = {
             'overall_accuracy': overall_accuracy,
             'block_results': detailed_results,
@@ -94,7 +103,23 @@ def save_results_to_json(args, model_name, pt_id, language, overall_accuracy,
                 for size, results in detailed_results.items()
             }
         }
-        existing_results[model_name][f'pt{pt_id}'][language][shot][args.prediction] = result_entry
+        shot_key = f"shot{shot}"
+        cot_key = f"CoT_{args.CoT}"
+        incontext_key = f"Incontext_{args.incontext}"
+
+        if shot_key not in existing_results[model_name][quantized_key][f'pt{pt_id}'][language][args.prediction]:
+            existing_results[model_name][quantized_key][f'pt{pt_id}'][language][args.prediction][shot_key] = {}
+        
+        if args.shot == 0:
+            existing_results[model_name][quantized_key][f'pt{pt_id}'][language][args.prediction][shot_key] = result_entry
+        else:
+            if cot_key not in existing_results[model_name][quantized_key][f'pt{pt_id}'][language][args.prediction][shot_key]:
+                existing_results[model_name][quantized_key][f'pt{pt_id}'][language][args.prediction][shot_key][cot_key] = {}
+
+            if incontext_key not in existing_results[model_name][quantized_key][f'pt{pt_id}'][language][args.prediction][shot_key][cot_key]:
+                existing_results[model_name][quantized_key][f'pt{pt_id}'][language][args.prediction][shot_key][cot_key][incontext_key] = {}
+            
+            existing_results[model_name][quantized_key][f'pt{pt_id}'][language][args.prediction][shot_key][cot_key][incontext_key] = result_entry
         
     elif args.prediction == "statement":
         result_entry = {
@@ -106,19 +131,19 @@ def save_results_to_json(args, model_name, pt_id, language, overall_accuracy,
         cot_key = f"CoT_{args.CoT}"
         incontext_key = f"Incontext_{args.incontext}"
 
-        if shot_key not in existing_results[model_name][f'pt{pt_id}'][language][args.prediction]:
-            existing_results[model_name][f'pt{pt_id}'][language][args.prediction][shot_key] = {}
+        if shot_key not in existing_results[model_name][quantized_key][f'pt{pt_id}'][language][args.prediction]:
+            existing_results[model_name][quantized_key][f'pt{pt_id}'][language][args.prediction][shot_key] = {}
         
         if args.shot == 0:
-            existing_results[model_name][f'pt{pt_id}'][language][args.prediction][shot_key] = result_entry
-
+            existing_results[model_name][quantized_key][f'pt{pt_id}'][language][args.prediction][shot_key] = result_entry
         else:
-            if cot_key not in existing_results[model_name][f'pt{pt_id}'][language][args.prediction][shot_key]:
-                existing_results[model_name][f'pt{pt_id}'][language][args.prediction][shot_key][cot_key] = {}
+            if cot_key not in existing_results[model_name][quantized_key][f'pt{pt_id}'][language][args.prediction][shot_key]:
+                existing_results[model_name][quantized_key][f'pt{pt_id}'][language][args.prediction][shot_key][cot_key] = {}
 
-            if incontext_key not in existing_results[model_name][f'pt{pt_id}'][language][args.prediction][shot_key][cot_key]:
-                existing_results[model_name][f'pt{pt_id}'][language][args.prediction][shot_key][cot_key][incontext_key] = {}
-            existing_results[model_name][f'pt{pt_id}'][language][args.prediction][shot_key][cot_key][incontext_key] = result_entry
+            if incontext_key not in existing_results[model_name][quantized_key][f'pt{pt_id}'][language][args.prediction][shot_key][cot_key]:
+                existing_results[model_name][quantized_key][f'pt{pt_id}'][language][args.prediction][shot_key][cot_key][incontext_key] = {}
+            
+            existing_results[model_name][quantized_key][f'pt{pt_id}'][language][args.prediction][shot_key][cot_key][incontext_key] = result_entry
     
     with open(results_path, 'w') as f:
         json.dump(existing_results, f, indent=2)
@@ -183,6 +208,24 @@ def load_my_dataset(data_id):
     elif data_id == 9:
         with open("dataset/aliasing_dataset_c.jsonl", 'r') as f:
             dataset = [json.loads(line) for line in f]
+    elif data_id == 10:
+        with open("dataset/statement_prediction_dataset_python_quantized.jsonl", 'r') as f:
+            dataset = [json.loads(line) for line in f]
+    elif data_id == 11:
+        with open("dataset/input_output_dataset_python_quantized.jsonl", 'r') as f:
+            dataset = [json.loads(line) for line in f]
+    elif data_id == 12:
+        with open("dataset/incremental_statement_prediction_python_10_quantized.jsonl", 'r') as f:
+            dataset = [json.loads(line) for line in f]
+    elif data_id == 13:
+        with open("dataset/loop_iteration_dataset_python_quantized.jsonl", 'r') as f:
+            dataset = [json.loads(line) for line in f]
+    elif data_id == 14:
+        with open("dataset/loop_body_dataset_python_quantized.jsonl", 'r') as f:
+            dataset = [json.loads(line) for line in f]
+    elif data_id == 15:
+        with open("dataset/loop_after_dataset_python_quantized.jsonl", 'r') as f:
+            dataset = [json.loads(line) for line in f]
     else:
         raise NotImplementedError
     return dataset
@@ -208,6 +251,7 @@ def model_id2name_cls(model_id: int):
         15: ("deepseek-ai/DeepSeek-R1-Distill-Llama-8B", LocalVLLM, "openai"),
         16: ("deepseek-ai/DeepSeek-R1-Distill-Qwen-14B", LocalVLLM, "openai"),
         17: ("ibm-granite/granite-3.2-8b-instruct-preview", LocalVLLM, "openai"), 
+        18: ("Qwen/Qwen3-8B", LocalVLLM, "openai"), 
     }
     
     if model_id not in model_map:
@@ -226,22 +270,24 @@ def load_pt(pt_id, demos=None, args=None):
     if demos is None:
         demos = []
     
-    pt_map = {
-        0: lambda: StatementPt1('pt1', demos=demos, args=args),
-        1: lambda: StatementPt2('pt2', demos=demos, args=args),
-        2: lambda: StatementPt3('pt3', demos=demos, args=args),
-    }
+    #from statementpt1 we are changing prompts based on different pt_ids
+    return StatementPt1('pt1', demos=demos, args=args)
+    # pt_map = {
+    #     0: lambda: StatementPt1('pt1', demos=demos, args=args),
+    #     1: lambda: StatementPt2('pt2', demos=demos, args=args),
+    #     2: lambda: StatementPt3('pt3', demos=demos, args=args),
+    # }
     
-    if pt_id not in pt_map:
-        raise ValueError(f"PT ID {pt_id} is not valid")
-    return pt_map[pt_id]()  # Call the lambda to create instance
+    # if pt_id not in pt_map:
+    #     raise ValueError(f"PT ID {pt_id} is not valid")
+    # return pt_map[pt_id]()  # Call the lambda to create instance
 
 
-def get_default_config():
-    return {
+def get_default_config(args):
+    config = {
         'temperature': 0.8,
         "top_p": 0.95,
-        "max_tokens": 1024,
+        "max_tokens": 4096,  # Default value
         "tp_size": 1,
         "dtype": "float16",
         "stop": [
@@ -250,3 +296,8 @@ def get_default_config():
             "\n@", "\nif __name__ == '__main__':"
         ]
     }
+
+    if hasattr(args, 'model_id') and args.model_id in range(13, 18):
+        config["max_tokens"] = 16392 
+
+    return config

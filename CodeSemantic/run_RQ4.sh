@@ -6,7 +6,7 @@ for model_id in {7..17}; do
   echo "Clearing Hugging Face cache before running model_id $model_id..."
   rm -rf $CACHE_PATH
 
-  for shot in 0 1 2; do
+  for shot in 3; do
     if [ "$shot" -eq 0 ]; then
       python statement_semantic.py \
         --data_id 0 \
