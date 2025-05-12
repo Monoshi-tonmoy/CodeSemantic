@@ -261,6 +261,7 @@ def model_id2name_cls(model_id: int):
         16: ("deepseek-ai/DeepSeek-R1-Distill-Qwen-14B", LocalVLLM, "openai"),
         17: ("ibm-granite/granite-3.2-8b-instruct-preview", LocalVLLM, "openai"), 
         18: ("Qwen/Qwen3-8B", LocalVLLM, "openai"), 
+        19: ("anthropic.claude-3-7-sonnet-20250219-v1:0", AbstLiteLLM, "bedrock" )
     }
     
     if model_id not in model_map:
