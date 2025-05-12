@@ -188,7 +188,7 @@ def load_my_dataset(data_id):
         with open("dataset/incremental_statement_prediction_python.jsonl", 'r') as f:
             dataset = [json.loads(line) for line in f]
     elif data_id == 3:
-        with open("dataset/incremental_statement_prediction_c.jsonl", 'r') as f:
+        with open("dataset/block_analysis_c.jsonl", 'r') as f:
             dataset = [json.loads(line) for line in f]
     elif data_id == 4:
         with open("dataset/incremental_statement_prediction_python_10.jsonl", 'r') as f:
@@ -225,6 +225,15 @@ def load_my_dataset(data_id):
             dataset = [json.loads(line) for line in f]
     elif data_id == 15:
         with open("dataset/loop_after_dataset_python_quantized.jsonl", 'r') as f:
+            dataset = [json.loads(line) for line in f]
+    elif data_id == 16:
+        with open("dataset/input_output_dataset_c.jsonl", 'r') as f:
+            dataset = [json.loads(line) for line in f]
+    elif data_id == 17:
+        with open("dataset/input_output_dataset_java.jsonl", 'r') as f:
+            dataset = [json.loads(line) for line in f]
+    elif data_id == 18:
+        with open("dataset/conditional_dataset_python.jsonl", 'r') as f:
             dataset = [json.loads(line) for line in f]
     else:
         raise NotImplementedError

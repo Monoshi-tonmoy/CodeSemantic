@@ -199,14 +199,59 @@ def evaluate_io_based(res, args, model_name):
     file_path = f"{dir_path}Prompt_{args.pt_id}_CoT_{args.CoT}_incontext_{args.incontext}_quantization_{args.quantized_prediction}.jsonl"
 
     for d in res:
-        if args.quantized_prediction == "yes" and args.prediction == "input":
-            original_value = d['ori_task'].get('quantized_value_input', '')
-        elif args.quantized_prediction == "yes" and args.prediction == "output":
-            original_value = d['ori_task'].get('quantized_value_output', '')
-        elif args.quantized_prediction == "no" and args.prediction == 'input':
-            original_value = d['ori_task'].get('input', '')
-        elif args.quantized_prediction == "no" and args.prediction == 'output':
-            original_value = d['ori_task'].get('output', '')
+        if language == "c":
+            input_value = ""
+            if args.prediction == "output":
+                output_str = d['ori_task'].get('output', '{}')
+                output_str = output_str.replace("'", '"')
+                output_dict = json.loads(output_str)
+                original_value = output_dict.get('value', '')
+                
+            elif args.prediction == "input":
+                original_value = ""
+                input_str = d['ori_task'].get('basic_input', '{}')
+                
+                try:
+                    input_dict = json.loads(input_str.replace("'", "\""))
+                except json.JSONDecodeError:
+                    input_dict = {}
+
+                if isinstance(input_dict, dict) and input_dict:
+                    first_param_name = next(iter(input_dict.keys()), None)
+                    if first_param_name:
+                        param_data = input_dict.get(first_param_name, {})
+                        original_value = param_data.get('value', '')
+                    
+        elif language == "java":
+            if args.prediction == "output":
+                output_list = d['ori_task'].get('output', '[]')
+            
+                original_values = [item.get('value', '') for item in output_list]
+
+                original_value = original_values[0] if original_values else ''
+                
+            elif args.prediction == "input":
+                input_values = []
+                if isinstance(d['ori_task'].get('basic_input'), list) and d['ori_task']['basic_input']:
+                    input_values = [param.get('value', '') for param in d['ori_task']['basic_input']]
+                
+
+                if len(input_values) > 1:
+                    original_value = tuple(input_values)  
+                elif len(input_values) == 1:
+                    original_value = input_values[0]    
+                else:
+                    original_value = ''     
+                
+        elif language == "python":
+            if args.quantized_prediction == "yes" and args.prediction == "input":
+                original_value = d['ori_task'].get('quantized_value_input', '')
+            elif args.quantized_prediction == "yes" and args.prediction == "output":
+                original_value = d['ori_task'].get('quantized_value_output', '')
+            elif args.quantized_prediction == "no" and args.prediction == 'input':
+                original_value = d['ori_task'].get('input', '')
+            elif args.quantized_prediction == "no" and args.prediction == 'output':
+                original_value = d['ori_task'].get('output', '')
         try:
             if 'pred_ans' in d and len(d['pred_ans']) > 0:
                 predicted_value = d['pred_ans'][0] if d['pred_ans'] else None
@@ -343,7 +388,7 @@ def evaluate_loop_based(res, args, model_name):
     overall_accuracy = np.mean(is_correct) if is_correct else 0.0
     return overall_accuracy, results, language
 
-def evaluate_alias_based(res, args):
+def evaluate_alias_based(res, args, model_name):
     is_correct = []
     results = {
         'correct': 0,
@@ -352,18 +397,23 @@ def evaluate_alias_based(res, args):
     }
     language = args.language
 
+    dir_path = f"Detailed_Results/Prediction_{args.prediction}_{args.language}/Model_{model_name}/Shot_{args.shot}/"
+
+    os.makedirs(dir_path, exist_ok=True)
+
+    #We have selected pt_id 1 from our prompt validation
+    file_path = f"{dir_path}Prompt_{args.pt_id}_CoT_{args.CoT}_incontext_{args.incontext}_quantization_{args.quantized_prediction}.jsonl"
+
     for d in res:
+        original_value = d['ori_task'].get('Aliasing', '')
         try:
             if 'pred_ans' in d and len(d['pred_ans']) > 0:
-                original_value = d['ori_task'].get('Aliasing', '')
-
-                
                 predicted_value = d['pred_ans'][0] if d['pred_ans'] else None
 
                 if isinstance(original_value, str):
-                    original_value = original_value.strip()
+                    original_value = original_value.strip().lower()
                 if isinstance(predicted_value, str):
-                    predicted_value = predicted_value.strip()
+                    predicted_value = predicted_value.strip().lower()
 
                 correct = original_value == predicted_value
                 is_correct.append(correct)
@@ -378,7 +428,22 @@ def evaluate_alias_based(res, args):
                 })
             else:
                 is_correct.append(False)
+                original_value = False
+                correct = False
+                predicted_value = None
                 results['total'] += 1
+                
+            with open(file_path, "a") as f:
+                entry = {
+                    "idx": d['ori_task']['idx'],
+                    "prompt":d['input'],
+                    "ground_truth": original_value,
+                    "original_task": d['ori_task'],
+                    "model_prediction": d['pred_text'],
+                    "parsed_prediction": predicted_value,
+                    "parsed_result": correct,
+                }
+                f.write(json.dumps(entry) + "\n")
                 
         except KeyError as e:
             print(f"Warning: Missing key {e} in response")
@@ -395,7 +460,79 @@ def evaluate_alias_based(res, args):
                 raise
 
     overall_accuracy = np.mean(is_correct) if is_correct else 0.0
-    print(overall_accuracy)
+    return overall_accuracy, results, language
+
+def evaluate_conditional_based(res, args, model_name):
+    is_correct = []
+    results = {
+        'correct': 0,
+        'total': 0,
+        'examples': [],
+    }
+    language = args.language
+
+    dir_path = f"Detailed_Results/Prediction_{args.prediction}_{args.language}/Model_{model_name}/Shot_{args.shot}/"
+
+    os.makedirs(dir_path, exist_ok=True)
+
+    #We have selected pt_id 1 from our prompt validation
+    file_path = f"{dir_path}Prompt_{args.pt_id}_CoT_{args.CoT}_incontext_{args.incontext}_quantization_{args.quantized_prediction}.jsonl"
+
+    for d in res:
+        original_value = d['ori_task'].get('answer', '')
+        try:
+            if 'pred_ans' in d and len(d['pred_ans']) > 0:
+                predicted_value = d['pred_ans'][0] if d['pred_ans'] else None
+
+                if isinstance(original_value, str):
+                    original_value = original_value.strip().lower()
+                if isinstance(predicted_value, str):
+                    predicted_value = predicted_value.strip().lower()
+
+                correct = original_value == predicted_value
+                is_correct.append(correct)
+                results['correct'] += int(correct)
+                results['total'] += 1
+                
+                results['examples'].append({
+                    'correct': correct,
+                    'expected': original_value,
+                    'predicted': predicted_value,
+                    'code': d['ori_task'].get('Source Code', '')
+                })
+            else:
+                is_correct.append(False)
+                correct = False
+                predicted_value = False
+                results['total'] += 1
+                
+            with open(file_path, "a") as f:
+                entry = {
+                    "idx": d['ori_task']['idx'],
+                    "prompt":d['input'],
+                    "ground_truth": original_value,
+                    "original_task": d['ori_task'],
+                    "model_prediction": d['pred_text'],
+                    "parsed_prediction": predicted_value,
+                    "parsed_result": correct,
+                }
+                f.write(json.dumps(entry) + "\n")
+                
+        except KeyError as e:
+            print(f"Warning: Missing key {e} in response")
+            is_correct.append(False)
+            results['total'] += 1
+        except RuntimeError as e:
+            if 'CUDA out of memory' in str(e):
+                print("CUDA out of memory error - treating as incorrect")
+                is_correct.append(False)
+                results['total'] += 1
+                if hasattr(torch, 'cuda'):
+                    torch.cuda.empty_cache()
+            else:
+                raise
+
+    overall_accuracy = np.mean(is_correct) if is_correct else 0.0
     return overall_accuracy, results, language
 
 def parse_arguments():
@@ -404,7 +541,7 @@ def parse_arguments():
     parser.add_argument('--model_id', type=int, required=True, help='Model ID to evaluate')
     parser.add_argument('--pt_id', type=int, required=True, help='Prompt template ID')
     parser.add_argument('--language', type=str, default=None, help='Programming language filter')
-    parser.add_argument('--prediction', type=str, choices=['statement','block','input', 'output', 'loop', 'alias'], 
+    parser.add_argument('--prediction', type=str, choices=['statement','block','input', 'output', 'loop', 'alias', 'conditional'], 
                        default='value', help='What to predict and evaluate against')
     parser.add_argument('--settings', type=str, default='default', 
                        help='Additional settings for evaluation')
@@ -439,6 +576,7 @@ def main():
     res = model.chat_batch(pt, remaining_dataset)
     
     
+    
     if args.prediction == "statement":
         overall_accuracy, type_accuracy, type_total, language = evaluate_statement_based(res, args, model.model_name)
         print(overall_accuracy)
@@ -463,9 +601,6 @@ def main():
         with open(f"{dir_path}{args.prediction}_{args.language}_results.jsonl", "a") as f:
             f.write(json.dumps(data_entry) + "\n")
 
-        # with open("cot_yes.jsonl", "a") as f:
-        #     f.write(json.dumps(data_entry) + "\n")
-            
             
         # save_results_to_json(
         #     args, model.model_name, args.pt_id, language, 
@@ -529,12 +664,51 @@ def main():
         #     overall_accuracy, None, loop_results
         # )
     elif args.prediction == "alias":
-        overall_accuracy, loop_results, language = evaluate_alias_based(res, args)
+        overall_accuracy, loop_results, language = evaluate_alias_based(res, args, model.model_name)
+        print(overall_accuracy)
+        dir_path = f"{args.prediction}_Accuracy_Results/"
+
+        os.makedirs(dir_path, exist_ok=True)
         
-        save_results_to_json(
-            args, model.model_name, args.pt_id, language, 
-            overall_accuracy, None, loop_results
-        )
+        data_entry = {
+            "Model": model.model_name,
+            "Prediction": args.prediction,
+            "Prompt": args.pt_id,
+            "Incontext": args.incontext,
+            "CoT": args.CoT,
+            "shot": args.shot,
+            "quantization": args.quantized_prediction,
+            "accuracy": overall_accuracy,
+        }
+
+        with open(f"{dir_path}{args.prediction}_{args.language}_results.jsonl", "a") as f:
+            f.write(json.dumps(data_entry) + "\n")
+            
+    elif args.prediction == "conditional":
+        overall_accuracy, conditional_results, language = evaluate_conditional_based(res, args, model.model_name)
+        print(overall_accuracy)
+        dir_path = f"{args.prediction}_Accuracy_Results/"
+
+        os.makedirs(dir_path, exist_ok=True)
+        
+        data_entry = {
+            "Model": model.model_name,
+            "Prediction": args.prediction,
+            "Prompt": args.pt_id,
+            "Incontext": args.incontext,
+            "CoT": args.CoT,
+            "shot": args.shot,
+            "quantization": args.quantized_prediction,
+            "accuracy": overall_accuracy,
+        }
+
+        with open(f"{dir_path}{args.prediction}_{args.language}_results.jsonl", "a") as f:
+            f.write(json.dumps(data_entry) + "\n")
+        
+        # save_results_to_json(
+        #     args, model.model_name, args.pt_id, language, 
+        #     overall_accuracy, None, loop_results
+        # )
     
     elif args.prediction == "block":
         overall_accuracy, block_results, language = evaluate_block_based(res, args, model.model_name)

@@ -4,6 +4,7 @@ from .prompt_template import PROMPT_REGISTRY
 from .prompting_utils import incontext_prompt_generator
 sys.path.append('/home/monoshi/CodeSemantic/CodeSemantic')
 from dataset_utils import incontext_shots_with_same_statement
+import json
 
 
 
@@ -51,16 +52,51 @@ class StatementPt1(AbstPt):
             pt = pt.format(
                 lang=self.args.language.lower(),
                 code=task['code'],
-                input=task['input'],
-
+                input= task['basic_input'][0] if self.args.language == "java" else task['input'],
                 )
         elif self.args.prediction == "input":
+            input_var = ""
+            msg = ""
+            if self.args.language.lower() == "c":
+                basic_input = task.get('basic_input', {})
+                if isinstance(basic_input, str):
+                    try:
+                        basic_input = json.loads(basic_input.replace("'", "\""))
+                    except json.JSONDecodeError:
+                        basic_input = {}
+
+                if isinstance(basic_input, dict) and basic_input:
+                    input_var = next(iter(basic_input.keys()), "")
+                
+                if input_var:
+                    msg += f"Predict the value of input parameter {input_var} based on the given output.\n"
+                    
+            elif self.args.language.lower() == "java":
+                if task.get('basic_input'):
+                    input_vars = [item['name'] for item in task['basic_input']]
+                    
+                    if len(input_vars) > 1:
+                        var_string = f"({', '.join(input_vars)})"
+                        msg += f"Predict the values of input parameters {var_string} based on the given output.\n"
+                    else:
+                        msg += f"Predict the value of input parameter {input_vars[0]} based on the given output.\n"
+                        
             pt = self.get_template(self.args.prediction)
             pt = pt.format(
                 lang = self.args.language.lower(),
                 code=task['code'],
-                output=task['output'],
+                output=task['output'][0] if self.args.language == "java" else task['output'],
                 )
+            if msg and self.args.prediction == "input":
+                lines = pt.split('\n')
+                if lines:
+                    lines.insert(-1, msg.strip())
+                else:
+                    lines = [msg.strip()]
+                pt = '\n'.join(lines)
+            else:
+                pt = pt
+                
         elif self.args.prediction == "loop":
             if self.args.settings == "iteration":
                 pt = self.get_template("loop_iteration")
@@ -76,6 +112,13 @@ class StatementPt1(AbstPt):
                     code=task['loop_code'],
                     question=task['question'],
                 )
+        elif self.args.prediction == "conditional":
+            pt = self.get_template("conditional")
+            pt = pt.format(
+                lang = self.args.language.lower(),
+                code=task['Source Code'],
+                question=task['question'],
+            )   
         elif self.args.prediction == "alias":
             pt = self.get_template(self.args.prediction)
             pt = pt.format(
@@ -85,7 +128,6 @@ class StatementPt1(AbstPt):
                 pointer_1 = task['Selected Pointer'],
                 line_1 = task['Selected Statement'],
                 pointer_2 = task['Compared Pointer'],
-                line_2 = task['Compared Statement'], 
             )
         elif self.args.prediction == "block":
             pt = self.get_template(self.args.prediction)
@@ -131,7 +173,7 @@ class StatementPt1(AbstPt):
             msg = self.demo2msg(demos)
             pt = msg + pt + "\n"+quantize_str
 
-        # with open('/home/monoshi/CodeSemantic/CodeSemantic/block_prompt.txt', 'w') as f:
+        # with open('/home/monoshi/CodeSemantic/CodeSemantic/alias_prompt.txt', 'w') as f:
         #     f.write(pt)
         # print(pt)
         return pt

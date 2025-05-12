@@ -4,7 +4,7 @@ import numpy as np
 
 
 data = []
-with open("/home/monoshi/CodeSemantic/CodeSemantic/block_Accuracy_Results/block_python_results.jsonl", "r") as f:
+with open("/home/monoshi/CodeSemantic/CodeSemantic/block_Accuracy_Results/block_c_results.jsonl", "r") as f:
     for line in f:
         data.append(json.loads(line))
 
@@ -112,7 +112,7 @@ def plot_block_accuracy(data, quantization_type):
     ax.grid(axis='y', linestyle='--', alpha=0.3)
     
 
-    filename = f"Zero-Shot block_accuracy_quantization_{quantization_type}.png"
+    filename = f"C_Zero-Shot block_accuracy_quantization_{quantization_type}.png"
     plt.savefig(filename, dpi=300, bbox_inches="tight")
     print(f"Saved figure as {filename}")
     plt.close()

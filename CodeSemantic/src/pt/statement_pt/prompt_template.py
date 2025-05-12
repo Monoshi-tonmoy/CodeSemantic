@@ -65,6 +65,17 @@ PROMPT_REGISTRY = {
             "{variables}\n\n"
             "Please put your answer in the <ans></ans> tags, Do not include any extra information."
         ),
+        "conditional": (
+            "Given the following {lang} code snippet and the selected branch statement, "
+            "the local variable values before the branch statements are shown as follows, "
+            "Will the nvidbranch be executed based on the condition expression variable values? Please answer \"Yes\" or \"No\".\n\n"
+            "Code Snippet\n"
+            "```{lang}\n"
+            "{code}\n"
+            "```\n\n"
+            "Question: {question}\n\n"
+            "Please put your answer in the <ans></ans> tags, Do not include any extra information."
+        ),
         "api": (
             "Given the following {lang} code snippet and the selected statement, "
             "the local variable values of the api/function parameters are shown as follows, "
@@ -136,8 +147,8 @@ PROMPT_REGISTRY = {
         "alias": (
             "Given the following {lang} code snippet and its input parameters:\n\n"
             "You are given two pointer variables in the code:\n"
-            "- Pointer A: {pointer_1} (line {line_1})\n"
-            "- Pointer B: {pointer_2} (line {line_2})\n\n"
+            "- Pointer A: {pointer_1}\n"
+            "- Pointer B: {pointer_2}\n\n"
             "Determine if these pointers are aliases (reference the same memory address).\n"
             "Respond with:\n"
             "- \"Yes\" if they point to the same memory location\n"
@@ -149,7 +160,7 @@ PROMPT_REGISTRY = {
             "Function Input:\n"
             "{input}\n\n"
             "Question:\n"
-            "Do {pointer_1} (line {line_1}) and {pointer_2} (line {line_2}) alias the same memory address?\n\n"
+            "Do {pointer_1} and {pointer_2} in (line {line_1}) alias the same memory address?\n\n"
             "Provide your answer within <ans></ans> tags."
         ),
         "assignment_cot": (
@@ -277,6 +288,16 @@ PROMPT_REGISTRY = {
             "{variables}\n\n"
             "Answer using <ans></ans> tags, Do not include any extra information."
         ),
+        "conditional": (
+            "Here’s a branch (if) block statement in {lang}.\n"
+            "Will the branch run given the function call? Answer 'Yes' or 'No'.\n\n"
+            "Code:\n"
+            "```{lang}\n"
+            "{code}\n"
+            "```\n\n"
+            "Question: {question}\n\n"
+            "Answer using <ans></ans> tags, Do not include any extra information."
+        ),
         "api": (
             "Here’s a function or API call in {lang} with some parameters.\n"
             "Based on the inputs, what will it return?\n\n"
@@ -390,6 +411,21 @@ PROMPT_REGISTRY = {
             "We know the output: {output}\n"
             "Work backwards—what input could’ve led to that?\n"
             "Figure out what had to happen in the code, and reverse it to get the input."
+        ),
+        "alias": (
+            "Here's some {lang} code with two pointer variables:\n"
+            "- Pointer A: '{pointer_1}'\n"
+            "- Pointer B: '{pointer_2}'\n\n"
+            "Do these pointers reference the same memory address? Answer \"Yes\" or \"No\".\n\n"
+            "Code:\n"
+            "```{lang}\n"
+            "{code}\n"
+            "```\n\n"
+            "Function Input:\n"
+            "{input}\n\n"
+            "Question:\n"
+            "Do '{pointer_1}' and '{pointer_2}' in (line {line_1}) point to the same memory location?\n\n"
+            "Put your answer in <ans></ans> tags."
         ),
     },
     "pt2": {
@@ -505,7 +541,22 @@ PROMPT_REGISTRY = {
         "input_cot": (
             "1. Reverse-engineer {output}\n"
             "2. Required input: <ans></ans>."
-        )
+        ),
+        "alias": (
+            "Here's some {lang} code with two pointer variables:\n"
+            "- Pointer A: {pointer_1}\n"
+            "- Pointer B: {pointer_2}\n\n"
+            "Do these pointers reference the same memory address? Answer \"Yes\" or \"No\".\n\n"
+            "Code:\n"
+            "```{lang}\n"
+            "{code}\n"
+            "```\n\n"
+            "Function Input:\n"
+            "{input}\n\n"
+            "Question:\n"
+            "Do {pointer_1} and {pointer_2} in (line {line_1}) point to the same memory location?\n\n"
+            "Put your answer in <ans></ans> tags."
+        ),
     },
     "pt3": {
         "statement_msg": (
