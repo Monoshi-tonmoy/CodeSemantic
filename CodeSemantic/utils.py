@@ -235,6 +235,21 @@ def load_my_dataset(data_id):
     elif data_id == 18:
         with open("dataset/conditional_dataset_python.jsonl", 'r') as f:
             dataset = [json.loads(line) for line in f]
+    elif data_id == 19:
+        with open("dataset/statement_prediction_dataset_python_quantized_200.jsonl", 'r') as f:
+            dataset = [json.loads(line) for line in f]
+    elif data_id == 20:
+        with open("dataset/input_output_dataset_python_quantized_200.jsonl", 'r') as f:
+            dataset = [json.loads(line) for line in f]
+    elif data_id == 21:
+        with open("dataset/statement_prediction_dataset_c_200.jsonl", 'r') as f:
+            dataset = [json.loads(line) for line in f]
+    elif data_id == 22:
+        with open("dataset/incremental_statement_prediction_python_10_quantized_200.jsonl", 'r') as f:
+            dataset = [json.loads(line) for line in f]
+    elif data_id == 23:
+        with open("dataset/block_analysis_c_200.jsonl", 'r') as f:
+            dataset = [json.loads(line) for line in f]
     else:
         raise NotImplementedError
     return dataset
@@ -261,7 +276,8 @@ def model_id2name_cls(model_id: int):
         16: ("deepseek-ai/DeepSeek-R1-Distill-Qwen-14B", LocalVLLM, "openai"),
         17: ("ibm-granite/granite-3.2-8b-instruct-preview", LocalVLLM, "openai"), 
         18: ("Qwen/Qwen3-8B", LocalVLLM, "openai"), 
-        19: ("anthropic.claude-3-7-sonnet-20250219-v1:0", AbstLiteLLM, "bedrock" )
+        19: ("anthropic.claude-3-7-sonnet-20250219-v1:0", AbstLiteLLM, "bedrock" ),
+        20: ("gpt-4o-mini", AbstLiteLLM, "openai"),
     }
     
     if model_id not in model_map:

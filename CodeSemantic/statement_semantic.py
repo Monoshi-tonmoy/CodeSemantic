@@ -583,6 +583,7 @@ def main():
     
         dir_path = f"{args.prediction}_Accuracy_Results/"
 
+
         os.makedirs(dir_path, exist_ok=True)
         
         
@@ -615,6 +616,7 @@ def main():
         dir_path = f"{args.prediction}_Accuracy_Results/"
 
         os.makedirs(dir_path, exist_ok=True)
+        
         
         data_entry = {
             "Model": model.model_name,

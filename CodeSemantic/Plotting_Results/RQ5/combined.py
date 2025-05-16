@@ -13,6 +13,12 @@ REASONING_MODELS = {
     "granite-3.2-8b-instruct-preview",
 }
 
+# Paid proprietary models set
+PAID_MODELS = {
+    "anthropic.claude-3-5-sonnet-20241022-v2:0",
+    "gemini-1.5-flash-002",
+}
+
 def load_and_filter_results(file_path, language, prediction_type):
     data = []
     with open(file_path, "r") as f:
@@ -25,15 +31,24 @@ def load_and_filter_results(file_path, language, prediction_type):
                     "Accuracy": record["accuracy"],
                     "Language": language,
                     "Prediction": prediction_type,
-                    "IsReasoning": record["Model"] in REASONING_MODELS
+                    "IsReasoning": record["Model"] in REASONING_MODELS,
+                    "IsPaid": record["Model"] in PAID_MODELS
                 })
     return data
 
 def plot_language_comparison(results, prediction_type):
     df = pd.DataFrame(results)
 
-    # Sort models: non-reasoning first, then reasoning
-    models_sorted = sorted(df['Model'].unique(), key=lambda x: x in REASONING_MODELS)
+    # Sort models: Free Non-Reasoning → Paid → Reasoning
+    def model_priority(model):
+        if model in REASONING_MODELS:
+            return (2, model)
+        elif model in PAID_MODELS:
+            return (1, model)
+        else:
+            return (0, model)
+
+    models_sorted = sorted(df['Model'].unique(), key=model_priority)
     df['Model'] = pd.Categorical(df['Model'], categories=models_sorted, ordered=True)
 
     # Plot setup
@@ -57,30 +72,34 @@ def plot_language_comparison(results, prediction_type):
         bars = ax.bar(x + i*width - width, lang_data['Accuracy'], width,
                       label=lang, color=palette[lang], edgecolor='black')
 
-        # Add reasoning model indicators
-        for j, model in enumerate(models):
-            if model in REASONING_MODELS:
+        # Add category indicators (Reasoning / Paid)
+        for j, row in lang_data.iterrows():
+            if row['IsReasoning']:
                 bars[j].set_edgecolor('red')
                 bars[j].set_hatch('///')
+            elif row['IsPaid']:
+                bars[j].set_edgecolor('green')
+                bars[j].set_hatch('\\\\\\')
 
     # Custom legend
     legend_elements = [
         Patch(facecolor=palette["Python"], label='Python'),
         Patch(facecolor=palette["C"], label='C'),
         Patch(facecolor=palette["Java"], label='Java'),
-        Patch(facecolor='white', edgecolor='red', hatch='///', label='Reasoning Model'),
-        Patch(facecolor='white', edgecolor='black', label='Non-Reasoning Model')
+        Patch(facecolor='white', edgecolor='red', hatch='///', label='Reasoning Models'),
+        Patch(facecolor='white', edgecolor='green', hatch='\\\\\\', label='Paid Models'),
+        Patch(facecolor='white', edgecolor='black', label='Free Non-Reasoning Models')
     ]
 
     # Labels and titles
-    ax.set_title(f'{prediction_type.capitalize()} Prediction Accuracy across Languages', pad=20, fontsize=14)
-    ax.set_xlabel('Model', labelpad=10)
+    # ax.set_title(f'{prediction_type.capitalize()} Prediction Accuracy across Languages', pad=20, fontsize=14)
+    # ax.set_xlabel('Model', labelpad=10)
     ax.set_ylabel('Accuracy', labelpad=10)
     ax.set_xticks(x)
     ax.set_xticklabels(models, rotation=45, ha='right')
     ax.set_ylim(0, 1.1)
     ax.grid(axis='y', linestyle='--', alpha=0.3)
-    ax.legend(handles=legend_elements, bbox_to_anchor=(1.02, 1), loc='upper left')
+    ax.legend(handles=legend_elements, loc='upper right', bbox_to_anchor=(0.95, 0.95), framealpha=1)
 
     plt.tight_layout()
     plt.savefig(f'{prediction_type}_prediction_language_comparison.png', dpi=300, bbox_inches='tight')

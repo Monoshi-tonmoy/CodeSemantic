@@ -56,10 +56,10 @@ bars = ax.bar(
 )
 
 
-for bar in bars:
-    height = bar.get_height()
-    ax.text(bar.get_x() + bar.get_width()/2, height + 0.01,
-            f'{height:.2f}', ha='center', va='bottom', fontsize=9)
+# for bar in bars:
+#     height = bar.get_height()
+#     ax.text(bar.get_x() + bar.get_width()/2, height + 0.01,
+#             f'{height:.2f}', ha='center', va='bottom', fontsize=9)
 
 
 legend_elements = [
@@ -70,14 +70,14 @@ legend_elements = [
 ]
 
 
-ax.set_title('Condition Prediction Accuracy', pad=20, fontsize=14)
-ax.set_xlabel('Model', labelpad=10)
+# ax.set_title('Condition Prediction Accuracy', pad=20, fontsize=14)
+# ax.set_xlabel('Model', labelpad=10)
 ax.set_ylabel('Accuracy', labelpad=10)
 ax.set_xticks(range(len(df)))
 ax.set_xticklabels(df['Model'], rotation=45, ha='right')
 ax.set_ylim(0, 1.1)
 ax.grid(axis='y', linestyle='--', alpha=0.3)
-ax.legend(handles=legend_elements, bbox_to_anchor=(1.02, 1), loc='upper left')
+ax.legend(handles=legend_elements, loc='upper right', bbox_to_anchor=(0.95, 0.95), framealpha=1)
 
 plt.tight_layout()
 plt.savefig('condition_accuracy.png', dpi=300, bbox_inches='tight')

@@ -2,11 +2,11 @@
 
 CACHE_PATH="/home/monoshi/.cache/huggingface/hub/*"
 
-for model_id in {7..17}; do
+for model_id in 7; do
     echo "Clearing Hugging Face cache before running model_id $model_id..."
     rm -rf $CACHE_PATH
 
-    for shot in {0..3}; do
+    for shot in 0; do
         for incontext in "different"; do
             for CoT in "no"; do
                 for quantized in "yes" "no"; do

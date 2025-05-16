@@ -106,8 +106,8 @@ def plot_block_accuracy(data, quantization_type):
         
     print(quantization_type)
 
-    ax.set_ylabel("Accuracy", fontsize=10)
-    ax.set_title(f"Block Accuracy ({quantization_type})", fontsize=12, pad=20)
+    #ax.set_ylabel("Accuracy", fontsize=10)
+    #ax.set_title(f"Block Accuracy ({quantization_type})", fontsize=12, pad=20)
     ax.set_ylim(0, 1)
     ax.grid(axis='y', linestyle='--', alpha=0.3)
     

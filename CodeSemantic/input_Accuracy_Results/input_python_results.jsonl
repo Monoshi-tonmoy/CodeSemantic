@@ -31,3 +31,6 @@
 {"Model": "DeepSeek-R1-Distill-Llama-8B", "Prediction": "input", "Prompt": 1, "Incontext": "different", "CoT": "no", "shot": 0, "quantization": "no", "accuracy": 0.05519480519480519}
 {"Model": "DeepSeek-R1-Distill-Qwen-14B", "Prediction": "input", "Prompt": 1, "Incontext": "different", "CoT": "no", "shot": 0, "quantization": "no", "accuracy": 0.08441558441558442}
 {"Model": "granite-3.2-8b-instruct-preview", "Prediction": "input", "Prompt": 1, "Incontext": "different", "CoT": "no", "shot": 0, "quantization": "no", "accuracy": 0.0}
+{"Model": "gemini-1.5-flash-002", "Prediction": "input", "Prompt": 1, "Incontext": "different", "CoT": "no", "shot": 0, "quantization": "no", "accuracy": 0.075}
+{"Model": "anthropic.claude-3-5-sonnet-20241022-v2:0", "Prediction": "input", "Prompt": 1, "Incontext": "different", "CoT": "no", "shot": 0, "quantization": "no", "accuracy": 0.09}
+{"Model": "gpt-4o-mini", "Prediction": "input", "Prompt": 1, "Incontext": "different", "CoT": "no", "shot": 0, "quantization": "no", "accuracy": 0.075}

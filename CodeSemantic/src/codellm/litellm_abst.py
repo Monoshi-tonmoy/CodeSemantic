@@ -11,14 +11,14 @@ from .llm_abst import AbstLLM
 class AbstLiteLLM(AbstLLM):
     def __init__(self, provider, model_name):
         super().__init__(provider, model_name)
-        file_path = '/home/sc5687/2_Project/CodeSampling/KEYS/vertexAI.json'
+        file_path = '/home/monoshi/Keys/llms-for-program-repa-3940-b3203405ffcc.json'
         with open(file_path, 'r') as file:
             vertex_credentials = json.load(file)
         self.vertex_credentials_json = json.dumps(vertex_credentials)
 
         self.kwargs = {
             "vertex_credentials": self.vertex_credentials_json,
-            "logprobs": 0,
+            "logprobs": False,
             "drop_params": True
         }
 

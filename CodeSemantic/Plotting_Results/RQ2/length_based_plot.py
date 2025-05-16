@@ -8,9 +8,9 @@ BASE_DIR = "~/CodeSemantic/CodeSemantic/Detailed_Results"
 BASE_DIR = os.path.expanduser(BASE_DIR)
 
 def get_difficulty(code_length):
-    if code_length <= 6:
+    if code_length <= 9:
         return "Small"
-    elif 6 < code_length <= 12:
+    elif 9 < code_length < 17:
         return "Medium"
     else:
         return "Hard"
@@ -28,7 +28,7 @@ def process_models(prediction_type="input"):
         if not os.path.isdir(model_path):
             continue
             
-        shot_dir = os.path.join(model_path, "Shot_3")
+        shot_dir = os.path.join(model_path, "Shot_0")
         if not os.path.exists(shot_dir):
             continue
             
@@ -57,7 +57,7 @@ def process_models(prediction_type="input"):
                     except (json.JSONDecodeError, KeyError) as e:
                         print(f"Error processing line in {filepath}: {e}")
                         continue
-            
+          
             results.append({
                 "model_name": model_dir.replace("Model_", ""),
                 "prediction_type": prediction_type,

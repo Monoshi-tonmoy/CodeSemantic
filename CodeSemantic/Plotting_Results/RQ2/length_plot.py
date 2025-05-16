@@ -43,6 +43,7 @@ def plot_quantization_accuracy(data, prediction_type, quantize_type):
     
     # Explicitly separate and sort models
     all_models = df['Model'].unique()
+    print(all_models)
     non_reasoning = sorted([m for m in all_models if m not in REASONING_MODELS])
     reasoning = sorted([m for m in all_models if m in REASONING_MODELS])
     models_sorted = non_reasoning + reasoning
@@ -92,21 +93,21 @@ def plot_quantization_accuracy(data, prediction_type, quantize_type):
     
     # Plot formatting
     quant_label = "Quantized" if quantize_type == "yes" else "Non-Quantized"
-    ax.set_title(
-        f'{prediction_type.capitalize()} Prediction Accuracy ({quant_label})\n',
-        pad=20, fontsize=14
-    )
-    ax.set_xlabel('Model', labelpad=10)
+    # ax.set_title(
+    #     f'{prediction_type.capitalize()} Prediction Accuracy ({quant_label})\n',
+    #     pad=20, fontsize=14
+    # )
+    #ax.set_xlabel('Model', labelpad=10)
     ax.set_ylabel('Accuracy', labelpad=10)
     ax.set_xticks(x + width)
     ax.set_xticklabels(models_sorted, rotation=45, ha='right', fontsize=10)
     ax.set_ylim(0, 1.1)
     ax.grid(axis='y', linestyle='--', alpha=0.3)
     ax.legend(
-        handles=legend_elements, 
-        bbox_to_anchor=(1.02, 1), 
-        loc='upper left',
-        framealpha=1
+        handles=legend_elements,
+        loc='upper right',        
+        framealpha=0.9,
+        fontsize=9
     )
     
     plt.tight_layout()

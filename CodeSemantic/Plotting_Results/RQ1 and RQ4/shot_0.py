@@ -34,8 +34,10 @@ type_df = pd.DataFrame(type_acc)
 def map_labels(label):
     label_mapping = {
         "API": "Function Call",
-        "Assignment": "Variable Assignment",
+        "Assignment": "Variable",
         "Arithmetic Assignment": "Arithmetic",
+        "Constant Assignment": "Constant",
+        "Branch": "Boolean"
     }
     return label_mapping.get(label, label)
 
@@ -104,7 +106,7 @@ model_colors = dict(zip(all_models, colors))
 # plt.show()
 
 # Define desired statement type order
-desired_order = ["Function Call", "Arithmetic", "Variable Assignment", "Branch", "Constant Assignment"]
+desired_order = ["Function Call", "Arithmetic", "Variable", "Boolean", "Constant"]
 
 # Filter and reorder pivot_df to match desired statement type order
 pivot_df = pivot_df.reindex(desired_order)
@@ -138,17 +140,17 @@ for j, model in enumerate(pivot_df.columns):
                      ha='center', va='center', rotation=90, fontsize=8)
 
 # Customize plot appearance
-plt.xlabel("Statement Type")
+#plt.xlabel("Statement Type")
 plt.ylabel("Accuracy")
-plt.title("Model Accuracy by Statement Type")
+#plt.title("Model Accuracy by Statement Type")
 plt.xticks(x_base, desired_order, rotation=45, ha='right')
 plt.ylim(0, 1.0)
 
 # Create custom legend
 legend_elements = [plt.Rectangle((0,0), 1, 1, color=model_colors[model], label=model) 
                    for model in pivot_df.columns]
-plt.legend(handles=legend_elements, bbox_to_anchor=(1.05, 1), 
-           loc='upper left', title="Models")
+# plt.legend(handles=legend_elements, bbox_to_anchor=(1.05, 1), 
+#            loc='upper left', title="Models")
 
 plt.grid(axis="y", linestyle="--", alpha=0.7)
 plt.tight_layout()

@@ -9,3 +9,6 @@
 {"Model": "Qwen2.5-Coder-7B-Instruct", "Prediction": "conditional", "Prompt": 1, "Incontext": "different", "CoT": "no", "shot": 0, "quantization": "no", "accuracy": 0.2446351931330472}
 {"Model": "DeepSeek-Coder-V2-Lite-Instruct", "Prediction": "conditional", "Prompt": 1, "Incontext": "different", "CoT": "no", "shot": 0, "quantization": "no", "accuracy": 0.23605150214592274}
 {"Model": "Phi-4-mini-instruct", "Prediction": "conditional", "Prompt": 1, "Incontext": "different", "CoT": "no", "shot": 0, "quantization": "no", "accuracy": 0.27896995708154504}
+{"Model": "gpt-4o-mini", "Prediction": "conditional", "Prompt": 1, "Incontext": "different", "CoT": "no", "shot": 0, "quantization": "no", "accuracy": 0.7725321888412017}
+{"Model": "anthropic.claude-3-5-sonnet-20241022-v2:0", "Prediction": "conditional", "Prompt": 1, "Incontext": "different", "CoT": "no", "shot": 0, "quantization": "no", "accuracy": 0.7854077253218884}
+{"Model": "gemini-1.5-flash-002", "Prediction": "conditional", "Prompt": 1, "Incontext": "different", "CoT": "no", "shot": 0, "quantization": "no", "accuracy": 0.7296137339055794}

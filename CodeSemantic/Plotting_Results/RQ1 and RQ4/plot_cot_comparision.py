@@ -46,8 +46,10 @@ models = sorted(model_results.keys(), key=lambda x: x in REASONING_MODELS)
 
 def create_cot_comparison_plot(quant_mode):
     # Professional color palette
-    colors = {'cot_yes': '#4e79a7', 'cot_no': '#f28e2b'}  # Blue and orange
-    
+    colors = {
+        'cot_yes': '#009E73', 
+        'cot_no': '#D55E00' 
+    }
     fig, ax = plt.subplots(figsize=(12, 6))
     
     shot = 3 
@@ -71,7 +73,6 @@ def create_cot_comparison_plot(quant_mode):
     
     display_mode = "Quantized" if quant_mode == "quantized" else "Concrete"
     
-    ax.set_title(f'{display_mode} Accuracy Comparison (Incontext="Same", Shot=3)\nChain-of-Thought (COT) vs No COT', pad=20)
     ax.set_xticks(x)
     ax.set_xticklabels(models, rotation=45, ha='right')
     ax.set_ylabel('Accuracy')
@@ -86,7 +87,7 @@ def create_cot_comparison_plot(quant_mode):
         Patch(facecolor='white', edgecolor='red', hatch='///', label='Reasoning Model'),
         Patch(facecolor='white', edgecolor='black', label='Non-Reasoning Model')
     ]
-    ax.legend(handles=legend_elements, bbox_to_anchor=(1.02, 1), loc='upper left')
+    ax.legend(handles=legend_elements, bbox_to_anchor=(1, 1), loc='upper right')
     
     plt.tight_layout()
     plt.savefig(f'{display_mode}_COT_comparison.png', bbox_inches='tight', dpi=300)
@@ -94,7 +95,12 @@ def create_cot_comparison_plot(quant_mode):
     
 def create_quantization_comparison_plot():
     # Professional color palette
-    colors = {'quantized': '#4e79a7', 'non_quantized': '#59a14f'}  # Blue and green
+    colors = {
+        'cot_yes': '#008000',  # Green for CoT: Yes
+        'cot_no': '#FF0000',   # Red for CoT: No
+        'quantized': '#1f77b4',  # Blue for Quantized models
+        'non_quantized': '#ff7f0e'  # Orange for Non-Quantized models
+    }
     
     fig, ax = plt.subplots(figsize=(12, 6))
     
@@ -118,7 +124,6 @@ def create_quantization_comparison_plot():
         ax.bar(x[i] + width/2, concrete_accuracies[i], width, 
               color=colors['non_quantized'], edgecolor=edgecolor, hatch=hatch)
     
-    ax.set_title('Quantized vs Concrete Accuracy Comparison (Incontext="Same", Shot=3, CoT="Yes")', pad=20)
     ax.set_xticks(x)
     ax.set_xticklabels(models, rotation=45, ha='right')
     ax.set_ylabel('Accuracy')
@@ -129,16 +134,17 @@ def create_quantization_comparison_plot():
     from matplotlib.patches import Patch
     legend_elements = [
         Patch(facecolor=colors['quantized'], label='Quantized'),
-        Patch(facecolor=colors['non_quantized'], label='Concrete'),
+        Patch(facecolor=colors['non_quantized'], label='Non-Quantized'),
         Patch(facecolor='white', edgecolor='red', hatch='///', label='Reasoning Model'),
         Patch(facecolor='white', edgecolor='black', label='Non-Reasoning Model')
     ]
-    ax.legend(handles=legend_elements, bbox_to_anchor=(1.02, 1), loc='upper left')
+    ax.legend(handles=legend_elements, bbox_to_anchor=(1, 1), loc='upper right')
     
     plt.tight_layout()
     plt.savefig('Quantized_vs_Concrete_CoT_Yes_comparison.png', bbox_inches='tight', dpi=300)
     plt.show()
 
+# Create and save plots
 create_quantization_comparison_plot()
 create_cot_comparison_plot("quantized")
 create_cot_comparison_plot("non_quantized")

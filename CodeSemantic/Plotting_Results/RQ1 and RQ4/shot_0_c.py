@@ -35,8 +35,10 @@ type_df = pd.DataFrame(type_acc)
 def map_labels(label):
     label_mapping = {
         "API": "Function Call",
-        "Assignment": "Variable Assignment",
+        "Assignment": "Variable",
         "Arithmetic Assignment": "Arithmetic",
+        "Constant Assignment": "Constant",
+        "Branch": "Boolean"
     }
     return label_mapping.get(label, label)
 
@@ -57,7 +59,7 @@ def plot_model_accuracy_by_type(df, quantization, output_file, plot_title):
         return
 
     # Desired statement type order
-    desired_order = ["Arithmetic", "Function Call", "Variable Assignment", "Branch", "Constant Assignment"]
+    desired_order = ["Arithmetic", "Function Call", "Variable", "Boolean", "Constant"]
     pivot_df = pivot_df.reindex(desired_order)
 
     # Plot settings
@@ -92,9 +94,9 @@ def plot_model_accuracy_by_type(df, quantization, output_file, plot_title):
                          ha='center', va='center', rotation=90, fontsize=8)
 
     # Customize plot appearance
-    plt.xlabel("Statement Type")
+    #plt.xlabel("Statement Type")
     plt.ylabel("Accuracy")
-    plt.title(plot_title)
+    #plt.title(plot_title)
     plt.xticks(x_base, pivot_df.index, rotation=45, ha='right')
     plt.ylim(0, 1.0)
 
