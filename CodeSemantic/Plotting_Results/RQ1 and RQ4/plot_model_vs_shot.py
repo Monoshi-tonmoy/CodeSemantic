@@ -34,7 +34,7 @@ for entry in data:
 models = list(model_results.keys())
 
 # Filter out paid models
-filtered_models = [model for model in models if model not in PAID_MODELS]
+filtered_models = [model for model in models]
 
 # Plotting settings
 shots = [0, 1, 2, 3]
