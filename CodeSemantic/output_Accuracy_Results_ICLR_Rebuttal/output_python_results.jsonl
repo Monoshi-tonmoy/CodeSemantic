@@ -1,0 +1,3 @@
+{"Model": "DeepSeek-R1-Distill-Qwen-14B", "Prediction": "output", "Prompt": 1, "Incontext": "different", "CoT": "no", "shot": 0, "quantization": "no", "accuracy": 0.7475}
+{"Model": "Qwen2.5-14B-Instruct-1M", "Prediction": "output", "Prompt": 1, "Incontext": "different", "CoT": "no", "shot": 0, "quantization": "no", "accuracy": 0.515}
+{"Model": "Qwen2.5-Coder-7B-Instruct", "Prediction": "output", "Prompt": 1, "Incontext": "different", "CoT": "no", "shot": 0, "quantization": "no", "accuracy": 0.49875}

@@ -29,7 +29,14 @@ class AbstLLM(ABC):
         self.ai_config = config
         self.temperature = config['temperature']
         self.top_p = config['top_p']
-        self.max_tokens = config['max_tokens']
+        
+        if 'max_tokens' in config:
+            self.max_tokens = config['max_tokens']
+        elif 'max_completion_tokens' in config:
+            self.max_completion_tokens = config['max_completion_tokens']
+        else:
+            self.max_tokens = 4096    
+        
         self.stop = config['stop']
         self.is_init = True
 

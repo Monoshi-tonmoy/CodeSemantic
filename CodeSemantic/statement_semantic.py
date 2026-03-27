@@ -27,7 +27,7 @@ def evaluate_statement_based(res, args, model_name):
     type_total = defaultdict(int)
     language = None
 
-    dir_path = f"Detailed_Results_ICLR/Prediction_{args.prediction}_{args.language}/Model_{model_name}/Shot_{args.shot}/"
+    dir_path = f"Detailed_Results_ICML/Prediction_{args.prediction}_{args.language}/Model_{model_name}/Shot_{args.shot}/"
 
     os.makedirs(dir_path, exist_ok=True)
 
@@ -66,16 +66,16 @@ def evaluate_statement_based(res, args, model_name):
                 type_total[stmt_type] += 1
 
         
-            with open(file_path, "a") as f:
-                entry = {
-                    "idx": d['ori_task']['idx'],
-                    "prompt":d['input'],
-                    "ground_truth": original_value,
-                    "model_prediction": d['pred_text'],
-                    "parsed_prediction": predicted_value,
-                    "parsed_result": correct,
-                }
-                f.write(json.dumps(entry) + "\n")
+            # with open(file_path, "a") as f:
+            #     entry = {
+            #         "idx": d['ori_task']['idx'],
+            #         "prompt":d['input'],
+            #         "ground_truth": original_value,
+            #         "model_prediction": d['pred_text'],
+            #         "parsed_prediction": predicted_value,
+            #         "parsed_result": correct,
+            #     }
+            #     f.write(json.dumps(entry) + "\n")
         
         except KeyError as e:
             print(f"Warning: Missing key {e} in response for model {model.model_name}")
@@ -255,8 +255,8 @@ def evaluate_io_based(res, args, model_name):
         try:
             if 'pred_ans' in d and len(d['pred_ans']) > 0:
                 predicted_value = d['pred_ans'][0] if d['pred_ans'] else None
-                # print(f"Original_Value:{original_value}")
-                # print(f"Predicted_Value:{predicted_value}")
+                print(f"Original_Value:{original_value}")
+                print(f"Predicted_Value:{predicted_value}")
 
                 if isinstance(original_value, str):
                     original_value = original_value.strip().lower()
@@ -267,6 +267,8 @@ def evaluate_io_based(res, args, model_name):
                 is_correct.append(correct)
                 results['correct'] += int(correct)
                 results['total'] += 1
+
+                print(f"Correctness:{correct}")
                 
                 results['examples'].append({
                     'correct': correct,
@@ -280,15 +282,27 @@ def evaluate_io_based(res, args, model_name):
                 is_correct.append(False)
                 results['total'] += 1
             with open(file_path, "a") as f:
-                entry = {
-                    "idx": d['ori_task']['idx'],
+                if args.data_id == 30:
+                    entry = {
+                    "idx": d['ori_task']['id'],
                     "prompt":d['input'],
                     "ground_truth": original_value,
                     "original_task": d['ori_task'],
                     "model_prediction": d['pred_text'],
                     "parsed_prediction": predicted_value,
                     "parsed_result": correct,
+                    "crux_id": d['ori_task'].get('crux_id', -1)
                 }
+                else:
+                    entry = {
+                        "idx": d['ori_task']['idx'],
+                        "prompt":d['input'],
+                        "ground_truth": original_value,
+                        "original_task": d['ori_task'],
+                        "model_prediction": d['pred_text'],
+                        "parsed_prediction": predicted_value,
+                        "parsed_result": correct,
+                    }
                 f.write(json.dumps(entry) + "\n")
                 
         except KeyError as e:
@@ -318,7 +332,7 @@ def evaluate_loop_based(res, args, model_name):
     }
     language = args.language
     
-    dir_path = f"Detailed_Results/Prediction_{args.prediction}_{args.language}/Model_{model_name}/Shot_{args.shot}/"
+    dir_path = f"Detailed_Results_ICLR_Re/Prediction_{args.prediction}_{args.language}/Model_{model_name}/Shot_{args.shot}/"
 
     os.makedirs(dir_path, exist_ok=True)
 
@@ -553,6 +567,7 @@ def parse_arguments():
                        help='Incontext with or without CoT')
     parser.add_argument('--quantized_prediction', type = str, default = 'no', choices=['yes','no'], required = True)
     parser.add_argument('--quantized_random', type = str, default = 'no', choices=['yes','no'], required = True)
+    parser.add_argument('--quantized_type', type = str, default = 'value', choices=['None','value','dtype'], required = False)
     parser.add_argument('--API_def', type = str, default = 'no', choices=['yes','no', 'code'], required = True)
     
     
@@ -584,7 +599,7 @@ def main():
         overall_accuracy, type_accuracy, type_total, language = evaluate_statement_based(res, args, model.model_name)
         print(overall_accuracy)
     
-        dir_path = f"{args.prediction}_Accuracy_Results_ICLR/"
+        dir_path = f"{args.prediction}_Accuracy_Results_ICML_new/"
 
 
         os.makedirs(dir_path, exist_ok=True)
@@ -600,17 +615,21 @@ def main():
             "shot": args.shot,
             "quantization": args.quantized_prediction,
             "random_baseline": args.quantized_random,
+            "quantization_type": args.quantized_type,
             "API definition": args.API_def,
             "accuracy": overall_accuracy,
             "type_accuracy": type_accuracy,
         }
-        if args.quantized_prediction == "yes":
-            with open(f"{dir_path}{args.prediction}_{args.language}_quantization_{args.quantized_prediction}.jsonl", "a") as f:
-                f.write(json.dumps(data_entry) + "\n")
+
+        with open(f"{dir_path}{args.prediction}_{args.language}.jsonl", "a") as f:
+            f.write(json.dumps(data_entry) + "\n")
+        # if args.quantized_prediction == "yes":
+        #     with open(f"{dir_path}{args.prediction}_{args.language}_quantization_{args.quantized_prediction}.jsonl", "a") as f:
+        #         f.write(json.dumps(data_entry) + "\n")
             
-        else:
-            with open(f"{dir_path}{args.prediction}_{args.language}_paid_models.jsonl", "a") as f:
-                f.write(json.dumps(data_entry) + "\n")
+        # else:
+        #     with open(f"{dir_path}{args.prediction}_{args.language}_paid_models.jsonl", "a") as f:
+        #         f.write(json.dumps(data_entry) + "\n")
 
             
         # save_results_to_json(
@@ -623,7 +642,7 @@ def main():
         overall_accuracy, io_results, language = evaluate_io_based(res, args, model.model_name)
 
         print(overall_accuracy)
-        dir_path = f"{args.prediction}_Accuracy_Results/"
+        dir_path = f"{args.prediction}_Accuracy_Results_ICLR_Rebuttal/"
 
         os.makedirs(dir_path, exist_ok=True)
         
@@ -649,7 +668,7 @@ def main():
     elif args.prediction == "loop":
         overall_accuracy, loop_results, language = evaluate_loop_based(res, args, model.model_name)
         print(overall_accuracy)
-        dir_path = f"{args.prediction}_Accuracy_Results/"
+        dir_path = f"{args.prediction}_Accuracy_Results_ICLR/"
 
         os.makedirs(dir_path, exist_ok=True)
         

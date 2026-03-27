@@ -1,0 +1,3 @@
+{"Model": "Qwen2.5-14B-Instruct-1M", "Prediction": "loop", "Prompt": 1, "Incontext": "different", "CoT": "no", "shot": 3, "quantization": "no", "accuracy": 0.5098039215686274, "settings": "iteration"}
+{"Model": "Qwen2.5-Coder-7B-Instruct", "Prediction": "loop", "Prompt": 1, "Incontext": "different", "CoT": "no", "shot": 3, "quantization": "no", "accuracy": 0.37254901960784315, "settings": "iteration"}
+{"Model": "DeepSeek-Coder-V2-Lite-Instruct", "Prediction": "loop", "Prompt": 1, "Incontext": "different", "CoT": "no", "shot": 3, "quantization": "no", "accuracy": 0.3235294117647059, "settings": "iteration"}

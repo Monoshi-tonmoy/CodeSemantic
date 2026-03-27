@@ -268,6 +268,12 @@ def load_my_dataset(data_id):
     elif data_id == 29:
         with open("dataset/api_prediction_dataset.jsonl", 'r') as f:
             dataset = [json.loads(line) for line in f]
+    elif data_id == 30:
+        with open("dataset/cruxeval.jsonl", 'r') as f:
+            dataset = [json.loads(line) for line in f]
+    elif data_id == 31:
+        with open("dataset/statement_prediction_dataset_Qdatatype_new.jsonl", 'r') as f:
+            dataset = [json.loads(line) for line in f]
     else:
         raise NotImplementedError
     return dataset
@@ -298,6 +304,11 @@ def model_id2name_cls(model_id: int):
         20: ("gpt-4o-mini", AbstLiteLLM, "openai"),
         21: ("deepseek-chat", AbstLiteLLM, "openai"), 
         22: ("deepseek-reasoner", AbstLiteLLM, "openai"),
+        23: ("Qwen/Qwen3-4B-Thinking-2507", LocalVLLM, "openai"),
+        24: ("Qwen/Qwen3-4B-Instruct-2507-FP8", LocalVLLM, "openai"),
+        25: ("gpt-5.1", AbstLiteLLM, "openai"),
+        26: ("Qwen/Qwen3-8B", LocalVLLM, "openai"),
+        27: ("Qwen/Qwen3-14B", LocalVLLM, "openai"),
     }
     
     if model_id not in model_map:
@@ -343,7 +354,10 @@ def get_default_config(args):
         ]
     }
 
-    if hasattr(args, 'model_id') and args.model_id in range(13, 18):
-        config["max_tokens"] = 16392 
+    # if hasattr(args, 'model_id') and args.model_id in range(13, 18):
+    #     config["max_tokens"] = 4096 
+    
+    if hasattr(args, 'model_id') and args.model_id == 25:
+        config["max_completion_tokens"] = config.pop("max_tokens")
 
     return config

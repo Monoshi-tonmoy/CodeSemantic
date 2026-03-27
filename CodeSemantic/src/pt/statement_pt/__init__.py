@@ -103,8 +103,10 @@ class StatementPt1(AbstPt):
     
                 rules_list = "\n".join([f"- {k} → {v}" for k, v in mapping_rules.items()])
                 
-                quantize_str += f"You MUST ONLY predict values that follow these quantization rules:\n{rules_list}.\nYour output MUST be one of the allowed quantized values.\n"
-
+                if self.args.quantized_type == "value":
+                    quantize_str += f"You MUST ONLY predict values that follow these quantization rules:\n{rules_list}.\nYour output MUST be one of the allowed quantized values.\n"
+                elif self.args.quantized_type == "dtype":
+                    quantize_str += f"You MUST ONLY predict data types that follow these quantization rules:\n{rules_list}.\nYour output MUST be one of the allowed quantized data types.\n"
         if self.args.prediction == "output":
             pt = self.get_template(self.args.prediction)
             pt = pt.format(
@@ -262,7 +264,7 @@ class StatementPt1(AbstPt):
 
         # with open('/home/monoshi/CodeSemantic/CodeSemantic/statement_prompt.txt', 'a') as f:
         #     f.write(pt)
-        #print(pt)
+        # #print(pt)
         return pt
 
     def extract_ans(self, prompt_str, llm_output_str):

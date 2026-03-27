@@ -266,7 +266,7 @@ PROMPT_REGISTRY = {
         ),
         "assignment": (
             "You’re given some {lang} code and one specific assignment line.\n"
-            "Here are the local variables just before that line runs. Can you figure out what will be the final output of the statement '{statement}' after executing the statement??\n\n"
+            "You are also given the local variables just before that line runs. Can you figure out what will be the final output of the statement '{statement}' after executing the statement??\n\n"
             "Code Snippet:\n"
             "```{lang}\n"
             "{code}\n"

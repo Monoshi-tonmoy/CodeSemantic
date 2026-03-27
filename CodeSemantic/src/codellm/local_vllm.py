@@ -26,7 +26,8 @@ class LocalVLLM(AbstLLM):
         self.llm = LLM(
             model=model,
             trust_remote_code=True,
-            max_model_len=4096,
+            max_model_len=40960,
+            tensor_parallel_size=1,
         )
 
         self.sampling_params = None
@@ -41,6 +42,7 @@ class LocalVLLM(AbstLLM):
             temperature=self.temperature,
             top_p=self.top_p,
             max_tokens=self.max_tokens,
+            #max_completion_tokens=self.max_completion_tokens,
             stop_token_ids=self.stop_token_ids,
             logprobs=self.logprobs,
             stop=self.stop
